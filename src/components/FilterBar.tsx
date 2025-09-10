@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Users, Star, ChevronDown } from 'lucide-react';
+import { Users, Star, ChevronDown, Store, Home } from 'lucide-react';
 import { FilterOptions } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 import { massageTypeKeys } from '../data/services';
@@ -9,13 +9,17 @@ interface FilterBarProps {
   onFiltersChange: (filters: FilterOptions) => void;
   onlineCount: number;
   totalCount: number;
+  openPlacesCount: number;
+  totalPlacesCount: number;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({ 
   filters, 
   onFiltersChange, 
   onlineCount, 
-  totalCount 
+  totalCount,
+  openPlacesCount,
+  totalPlacesCount
 }) => {
   const { t } = useTranslation();
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
@@ -41,12 +45,25 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   return (
     <div className="bg-white shadow-sm border-b border-gray-100 p-4 w-full">
       <div className="w-full max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
           <div className="flex items-center space-x-2 text-gray-600">
-            <Users className="h-4 w-4" />
+            {filters.serviceType === 'home' ? <Users className="h-4 w-4" /> : <Store className="h-4 w-4" />}
             <span className="text-sm">
-              {t('filterBar.onlineCount', { onlineCount, totalCount })}
+              {filters.serviceType === 'home' 
+                ? t('filterBar.onlineCount', { onlineCount, totalCount })
+                : t('filterBar.placesOpenCount', { openCount: openPlacesCount, totalCount: totalPlacesCount })
+              }
             </span>
+          </div>
+          <div className="flex items-center bg-gray-100 rounded-full p-1">
+            <button onClick={() => onFiltersChange({ ...filters, serviceType: 'home' })} className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${filters.serviceType === 'home' ? 'bg-primary-500 text-white shadow' : 'text-gray-600 hover:bg-gray-200'}`}>
+              <Home className="h-4 w-4" />
+              {t('filterBar.homeService')}
+            </button>
+            <button onClick={() => onFiltersChange({ ...filters, serviceType: 'places' })} className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${filters.serviceType === 'places' ? 'bg-primary-500 text-white shadow' : 'text-gray-600 hover:bg-gray-200'}`}>
+              <Store className="h-4 w-4" />
+              {t('filterBar.massagePlaces')}
+            </button>
           </div>
         </div>
         

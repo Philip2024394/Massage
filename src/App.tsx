@@ -1,224 +1,233 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Session } from '@supabase/supabase-js';
+import { AnimatePresence } from 'framer-motion';
 import { LandingPage } from './pages/LandingPage';
 import { HomePage } from './pages/HomePage';
 import { ReviewsPage } from './pages/ReviewsPage';
 import { TermsPage } from './pages/TermsPage';
 import { PackageDetailsPage } from './pages/PackageDetailsPage';
 import { LocationModal } from './components/LocationModal';
+import { LoadingScreen } from './components/LoadingScreen';
 import { AuthModal, RegisterForm, LoginForm } from './components/AuthModal';
 import { TherapistDashboard } from './components/TherapistDashboard';
+import { PlaceDashboard } from './components/PlaceDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
-import { TherapistProfile, UserLocation, FilterOptions, User, Review } from './types';
+import { PlaceDetailsPage } from './pages/PlaceDetailsPage';
+import { TherapistProfile, UserLocation, FilterOptions, User, Review, MassagePlaceProfile, TherapistFilterData, PlaceFilterData } from './types';
 import { calculateDistance, getWhatsAppUrl } from './utils/location';
 import { useTranslation } from './hooks/useTranslation';
+import { supabase } from './supabaseClient';
 import { ReviewFormData } from './components/SubmitReviewModal';
-import { generateMockTherapists } from './data/mockTherapists';
-import { generateMockReviews } from './data/mockReviews';
 
-interface ProfileForm { name: string; bio: string; experience: number; phone: string; city: string; pricing60: number; pricing90: number; pricing120: number; massageTypes: string[]; specialties: string[]; isOnline: boolean; }
-
-const ADMIN_PHONE = '+6281392000050';
+const ADMIN_EMAIL = 'admin@2gomassage.app';
 const ADMIN_PASSWORD = 'Phil123456';
+
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
 
 function AppContent() {
   const navigate = useNavigate();
+  const [isAppReady, setIsAppReady] = useState(false);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  
+  const [session, setSession] = useState<Session | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [therapists, setTherapists] = useState<TherapistProfile[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [loginActionCompleted, setLoginActionCompleted] = useState(false);
+
+  const [therapists, setTherapists] = useState<TherapistFilterData[]>([]);
+  const [places, setPlaces] = useState<PlaceFilterData[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  
   const [filters, setFilters] = useState<FilterOptions>({
-    onlineOnly: false, massageTypes: [], maxDistance: 50, minRating: 0, priceRange: { min: 0, max: 500 }
+    serviceType: 'home', onlineOnly: false, massageTypes: [], maxDistance: 50, minRating: 0, priceRange: { min: 0, max: 500 }
   });
   const { language } = useTranslation();
 
-  useEffect(() => {
-    // This ensures we are loading mock data and not calling Supabase.
-    setLoading(true);
-    const mockTherapists = generateMockTherapists(25);
-    const mockReviews = generateMockReviews(50, mockTherapists);
-    setTherapists(mockTherapists);
-    setReviews(mockReviews);
-    setLoading(false);
+  const fetchFilterableData = useCallback(async () => {
+    setDataLoading(true);
+    try {
+      const [therapistsRes, placesRes] = await Promise.all([
+        supabase.from('therapists').select('id, is_online, massage_types, rating, lat, lng').eq('status', 'active'),
+        supabase.from('places').select('id, is_online, services, rating, lat, lng').eq('status', 'active')
+      ]);
+
+      if (therapistsRes.error) throw therapistsRes.error;
+      if (placesRes.error) throw placesRes.error;
+
+      setTherapists(shuffleArray(therapistsRes.data as TherapistFilterData[]));
+      setPlaces(shuffleArray(placesRes.data as PlaceFilterData[]));
+
+    } catch (error) {
+      console.error('Error fetching filterable data:', error);
+    } finally {
+      setDataLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    if (userLocation && therapists.length > 0) {
-      const therapistsWithDistance = therapists.map(therapist => ({
-        ...therapist,
-        distance: calculateDistance(userLocation.lat, userLocation.lng, therapist.location.lat, therapist.location.lng)
-      })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
-      setTherapists(therapistsWithDistance);
+    fetchFilterableData();
+  }, [fetchFilterableData]);
+  
+  useEffect(() => {
+    if (!dataLoading && !authLoading) {
+      // Use a timeout to ensure the loading screen is visible for a minimum duration on first load
+      const timer = setTimeout(() => setIsAppReady(true), 500);
+      return () => clearTimeout(timer);
     }
-  }, [userLocation]);
+  }, [dataLoading, authLoading]);
 
-  const filteredTherapists = useMemo(() => therapists.filter(therapist => {
-      if (therapist.status !== 'active') return false;
-      if (filters.onlineOnly && !therapist.isOnline) return false;
-      if (filters.massageTypes.length > 0 && !filters.massageTypes.some(type => therapist.massageTypes.includes(type))) return false;
+  useEffect(() => {
+    setAuthLoading(true);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (session) {
+        let userProfile: User | null = null;
+        const { data: therapistData } = await supabase.from('therapists').select('id, name, phone').eq('id', session.user.id).single();
+        if (therapistData) {
+          userProfile = { id: therapistData.id, name: therapistData.name || 'Therapist', userType: 'therapist', phone: therapistData.phone || '' };
+        } else {
+          const { data: placeData } = await supabase.from('places').select('id, name, phone').eq('id', session.user.id).single();
+          if (placeData) {
+            userProfile = { id: placeData.id, name: placeData.name || 'Place Owner', userType: 'place', phone: placeData.phone || '' };
+          }
+        }
+        if (userProfile) setCurrentUser(userProfile);
+      } else {
+        setCurrentUser(null);
+      }
+    };
+    fetchUserProfile();
+  }, [session]);
+
+  useEffect(() => {
+    if (loginActionCompleted && currentUser) {
+      switch (currentUser.userType) {
+        case 'therapist': navigate('/therapist-dashboard'); break;
+        case 'place': navigate('/place-dashboard'); break;
+        case 'admin': navigate('/admin-dashboard'); break;
+        default: navigate('/home');
+      }
+      setLoginActionCompleted(false);
+    }
+  }, [loginActionCompleted, currentUser, navigate]);
+
+  const therapistsWithDistance = useMemo(() => {
+    if (!userLocation) return therapists;
+    return therapists.map(t => ({ ...t, distance: calculateDistance(userLocation.lat, userLocation.lng, t.lat || 0, t.lng || 0) }));
+  }, [therapists, userLocation]);
+
+  const placesWithDistance = useMemo(() => {
+    if (!userLocation) return places;
+    return places.map(p => ({ ...p, distance: calculateDistance(userLocation.lat, userLocation.lng, p.lat || 0, p.lng || 0) }));
+  }, [places, userLocation]);
+
+  const filteredTherapistIds = useMemo(() => therapistsWithDistance.filter(therapist => {
+      if (filters.onlineOnly && !therapist.is_online) return false;
+      if (filters.massageTypes.length > 0 && !filters.massageTypes.some(type => therapist.massage_types?.includes(type))) return false;
       if (therapist.distance && therapist.distance > filters.maxDistance) return false;
       if (therapist.rating < filters.minRating) return false;
       return true;
-    }), [therapists, filters]);
-
-  const onlineCount = useMemo(() => therapists.filter(t => t.isOnline && t.status === 'active').length, [therapists]);
-  const totalVisibleCount = useMemo(() => therapists.filter(t => t.status === 'active').length, [therapists]);
-
-  const handleLocationSet = (location: UserLocation) => setUserLocation(location);
-  const handleWhatsAppClick = (phone: string, name: string) => window.open(getWhatsAppUrl(phone, `Hi ${name}, I'm interested in booking a massage session.`), '_blank');
+    }).map(t => t.id), [therapistsWithDistance, filters]);
   
-  const handleLogout = () => {
+  const filteredPlaceIds = useMemo(() => placesWithDistance.filter(place => {
+      if (filters.onlineOnly && !place.is_online) return false;
+      if (filters.massageTypes.length > 0 && !filters.massageTypes.some(type => place.services?.includes(type))) return false;
+      if (place.distance && place.distance > filters.maxDistance) return false;
+      if (place.rating < filters.minRating) return false;
+      return true;
+  }).map(p => p.id), [placesWithDistance, filters]);
+
+  const onlineCount = useMemo(() => therapists.filter(t => t.is_online).length, [therapists]);
+  const openPlacesCount = useMemo(() => places.filter(p => p.is_online).length, [places]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setCurrentUser(null);
     navigate('/');
   };
 
-  const handleLogin = (data: LoginForm): string | void => {
-    const fullPhone = `+62${data.phone}`;
-
-    if (fullPhone === ADMIN_PHONE && data.password === ADMIN_PASSWORD) {
-      setCurrentUser({ id: 'admin-user', phone: ADMIN_PHONE, name: 'Admin User', userType: 'admin' });
+  const handleLogin = async (data: LoginForm): Promise<string | void> => {
+    if (data.email === ADMIN_EMAIL && data.password === ADMIN_PASSWORD) {
+      setCurrentUser({ id: 'admin-user', phone: '', name: 'Admin User', userType: 'admin' });
+      setLoginActionCompleted(true);
       setShowAuthModal(false);
-      navigate('/admin-dashboard');
       return;
     }
+    const { error } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
+    if (error) return error.message;
+    setLoginActionCompleted(true);
+    setShowAuthModal(false);
+  };
+
+  const handleRegister = async (data: RegisterForm, accountType: 'therapist' | 'place'): Promise<string | void> => {
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: data.email, password: data.password,
+      options: { data: { account_type: accountType, name: data.name, phone: `+62${data.phone}`, experience: data.experience, address: data.address, city: data.city } }
+    });
     
-    const therapistUser = therapists.find(t => t.phone === fullPhone);
-    if (therapistUser) {
-      setCurrentUser({ id: therapistUser.id, phone: therapistUser.phone, name: therapistUser.name, userType: 'therapist' });
+    if (signUpError) return signUpError.message.includes("User already registered") ? "This email is already registered." : signUpError.message;
+    
+    if (signUpData.user && signUpData.session) {
+      setSession(signUpData.session);
+      setLoginActionCompleted(true);
       setShowAuthModal(false);
-      navigate('/therapist-dashboard');
-    } else {
-      return "Invalid WhatsApp number or password.";
+    } else if (signUpData.user && !signUpData.session) {
+      // This case handles when a user is created but the session is not returned,
+      // which can happen if the profile creation trigger fails.
+      return "Database error saving new user. Please contact support.";
     }
-  };
-
-  const handleRegister = (data: RegisterForm) => {
-    const newTherapist: TherapistProfile = {
-      id: `mock-${Date.now()}`,
-      name: data.name,
-      profileImageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&h=400&q=80',
-      rating: 0,
-      reviewCount: 0,
-      specialties: [],
-      bio: `Newly registered therapist with ${data.experience} years of experience.`,
-      experience: data.experience,
-      isOnline: false,
-      status: 'pending',
-      location: { lat: 0, lng: 0, city: 'Unknown' },
-      pricing: { session60: 100000, session90: 150000, session120: 200000 },
-      massageTypes: [],
-      phone: `+62${data.phone}`,
-      languages: ['English', 'Indonesian'],
-      certifications: [],
-      therapistNumber: data.therapistNumber,
-    };
-    setTherapists(prev => [...prev, newTherapist]);
-  };
-
-  const handleUpdateTherapistStatus = (therapistId: string, newStatus: 'active' | 'pending' | 'blocked') => {
-    setTherapists(prev => prev.map(t => t.id === therapistId ? { ...t, status: newStatus } : t));
-  };
-  
-  const handleReviewSubmit = (therapistId: string, formData: ReviewFormData) => {
-    const newReview: Review = {
-      id: `mock-review-${Date.now()}`,
-      therapistId,
-      customerName: formData.customerName,
-      customerWhatsApp: formData.customerWhatsApp,
-      rating: formData.rating,
-      comment: formData.comment,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-    setReviews(prev => [newReview, ...prev]);
-  };
-
-  const handleUpdateReview = (reviewId: string, updates: Partial<Review>) => {
-    setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, ...updates } : r));
-  };
-
-  const handleDeleteReview = (reviewId: string) => {
-    setReviews(prev => prev.filter(r => r.id !== reviewId));
-  };
-
-  const currentTherapistProfile = useMemo(() => therapists.find(t => t.id === currentUser?.id), [therapists, currentUser]);
-
-  const handleUpdateProfile = (data: ProfileForm) => {
-    if (!currentUser) return;
-    setTherapists(prev => prev.map(t => {
-      if (t.id === currentUser.id) {
-        return {
-          ...t,
-          name: data.name, bio: data.bio, experience: data.experience, phone: data.phone,
-          location: { ...t.location, city: data.city },
-          pricing: { session60: data.pricing60, session90: data.pricing90, session120: data.pricing120 },
-          massageTypes: data.massageTypes, specialties: data.specialties, isOnline: data.isOnline,
-        };
-      }
-      return t;
-    }));
-  };
-
-  const handleUpdateProfileImage = (file: File) => {
-    if (!currentUser) return;
-    const newImageUrl = URL.createObjectURL(file);
-    setTherapists(prev => prev.map(t => t.id === currentUser.id ? { ...t, profileImageUrl: newImageUrl } : t));
-  };
-
-  const handleToggleStatus = () => {
-    if (!currentUser || !currentTherapistProfile) return;
-    const newStatus = !currentTherapistProfile.isOnline;
-    setTherapists(prev => prev.map(t => t.id === currentUser.id ? { ...t, isOnline: newStatus } : t));
   };
 
   useEffect(() => {
-    if (!userLocation && !currentUser && window.location.pathname === '/home') {
-      setShowLocationModal(true);
-    }
+    if (!userLocation && !currentUser && window.location.pathname === '/home') setShowLocationModal(true);
   }, [userLocation, currentUser, language, window.location.pathname]);
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/home" element={
-          <HomePage
-            userLocation={userLocation} currentUser={currentUser} filteredTherapists={filteredTherapists}
-            filters={filters} onlineCount={onlineCount} totalCount={totalVisibleCount}
-            onAuthClick={() => setShowAuthModal(true)} onLogout={handleLogout}
-            onFiltersChange={setFilters} onWhatsAppClick={handleWhatsAppClick}
-          />
-        } />
-        <Route path="/therapist/:therapistId/reviews" element={<ReviewsPage therapists={therapists} reviews={reviews} onReviewSubmit={handleReviewSubmit} />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/package-details" element={<PackageDetailsPage />} />
-        <Route path="/therapist-dashboard" element={
-          currentUser?.userType === 'therapist' && currentTherapistProfile ? (
-            <TherapistDashboard 
-              user={currentUser} therapistProfile={currentTherapistProfile} onLogout={handleLogout}
-              onUpdateProfile={handleUpdateProfile} onUpdateProfileImage={handleUpdateProfileImage}
-              onToggleStatus={handleToggleStatus}
-            />
-          ) : (<Navigate to="/home" />)
-        } />
-        <Route path="/admin-dashboard" element={
-          currentUser?.userType === 'admin' ? (
-            <AdminDashboard
-              user={currentUser} therapists={therapists} reviews={reviews} onLogout={handleLogout}
-              onUpdateTherapistStatus={handleUpdateTherapistStatus}
-              onUpdateReview={handleUpdateReview} onDeleteReview={handleDeleteReview}
-            />
-          ) : (<Navigate to="/home" />)
-        } />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-      <LocationModal isOpen={showLocationModal} onClose={() => setShowLocationModal(false)} onLocationSet={handleLocationSet} />
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLogin={handleLogin} onRegister={handleRegister} />
+      <AnimatePresence>{!isAppReady && <LoadingScreen />}</AnimatePresence>
+      {isAppReady && (
+        <>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/home" element={
+              <HomePage
+                currentUser={currentUser} filteredTherapistIds={filteredTherapistIds} filteredPlaceIds={filteredPlaceIds}
+                filters={filters} onlineCount={onlineCount} totalCount={therapists.length}
+                openPlacesCount={openPlacesCount} totalPlacesCount={places.length}
+                onAuthClick={() => setShowAuthModal(true)} onLogout={handleLogout}
+                onFiltersChange={setFilters} onWhatsAppClick={(p, n) => window.open(getWhatsAppUrl(p, `Hi ${n}`), '_blank')}
+              />
+            } />
+            <Route path="/therapist/:therapistId/reviews" element={<ReviewsPage />} />
+            <Route path="/place/:placeId/details" element={<PlaceDetailsPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/package-details" element={<PackageDetailsPage />} />
+            <Route path="/therapist-dashboard" element={currentUser?.userType === 'therapist' ? <TherapistDashboard user={currentUser} onLogout={handleLogout} onProfileUpdate={fetchFilterableData} /> : <Navigate to="/home" />} />
+            <Route path="/place-dashboard" element={currentUser?.userType === 'place' ? <PlaceDashboard user={currentUser} onLogout={handleLogout} onProfileUpdate={fetchFilterableData} /> : <Navigate to="/home" />} />
+            <Route path="/admin-dashboard" element={currentUser?.userType === 'admin' ? <AdminDashboard user={currentUser} onLogout={handleLogout} /> : <Navigate to="/home" />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+          <LocationModal isOpen={showLocationModal} onClose={() => setShowLocationModal(false)} onLocationSet={setUserLocation} />
+          <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLogin={handleLogin} onRegister={handleRegister} />
+        </>
+      )}
     </div>
   );
 }

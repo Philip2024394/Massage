@@ -1,7 +1,7 @@
 export interface TherapistProfile {
   id: string;
+  accountNumber: string;
   name: string;
-  email?: string;
   profileImageUrl: string;
   rating: number;
   reviewCount: number;
@@ -25,8 +25,47 @@ export interface TherapistProfile {
   phone: string;
   languages: string[];
   certifications: string[];
-  therapistNumber: string;
 }
+
+export interface MassagePlaceProfile {
+  id: string;
+  accountNumber: string;
+  name: string;
+  profileImageUrl: string;
+  rating: number;
+  reviewCount: number;
+  address: string;
+  city: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+  distance?: number;
+  phone: string;
+  services: string[];
+  isOnline: boolean; // Represents open/closed
+  status: 'active' | 'pending' | 'blocked';
+}
+
+export type TherapistFilterData = {
+  id: string;
+  is_online: boolean;
+  massage_types: string[] | null;
+  rating: number;
+  lat: number | null;
+  lng: number | null;
+  distance?: number;
+};
+
+export type PlaceFilterData = {
+  id: string;
+  is_online: boolean;
+  services: string[] | null;
+  rating: number;
+  lat: number | null;
+  lng: number | null;
+  distance?: number;
+};
 
 export interface UserLocation {
   lat: number;
@@ -35,6 +74,7 @@ export interface UserLocation {
 }
 
 export interface FilterOptions {
+  serviceType: 'home' | 'places';
   onlineOnly: boolean;
   massageTypes: string[];
   maxDistance: number;
@@ -49,7 +89,7 @@ export interface User {
   id: string;
   phone: string;
   name: string;
-  userType: 'therapist' | 'admin';
+  userType: 'therapist' | 'admin' | 'place';
   profileImage?: string;
 }
 
@@ -57,7 +97,8 @@ export type Language = 'en' | 'id';
 
 export interface Review {
   id: string;
-  therapistId: string;
+  targetId: string;
+  targetType: 'therapist' | 'place';
   customerName: string;
   customerWhatsApp: string;
   rating: number;

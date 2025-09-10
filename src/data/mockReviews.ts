@@ -9,7 +9,8 @@ export function generateMockReviews(count: number, therapists: TherapistProfile[
     const therapist = faker.helpers.arrayElement(therapists);
     reviews.push({
       id: faker.string.uuid(),
-      therapistId: therapist.id,
+      targetId: therapist.id,
+      targetType: 'therapist',
       customerName: faker.person.fullName(),
       customerWhatsApp: `+6281${faker.string.numeric(9)}`,
       rating: faker.number.int({ min: 4, max: 5 }),
