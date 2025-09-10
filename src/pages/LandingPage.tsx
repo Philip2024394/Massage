@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Logo } from '../components/Logo';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { useTranslation } from '../hooks/useTranslation';
-import { CandleAnimation } from '../components/CandleAnimation';
 
 export const LandingPage: React.FC = () => {
   const { t } = useTranslation();
@@ -34,10 +33,6 @@ export const LandingPage: React.FC = () => {
           <LanguageSelector />
         </motion.div>
       </div>
-
-      {/* Animated Candles for ambiance */}
-      <CandleAnimation className="absolute bottom-4 left-4 hidden md:block" />
-      <CandleAnimation className="absolute bottom-4 right-4 hidden md:block" />
     </div>
   );
 };

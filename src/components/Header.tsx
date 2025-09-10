@@ -1,5 +1,5 @@
 import React from 'react';
-import { User as UserIcon, LogOut, LayoutDashboard, Shield } from 'lucide-react';
+import { User as UserIcon, LogOut, LayoutDashboard, Shield, Building } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { User } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
@@ -18,6 +18,35 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { t } = useTranslation();
 
+  const getDashboardLink = () => {
+    if (!currentUser) return null;
+    switch (currentUser.userType) {
+      case 'admin':
+        return (
+          <Link to="/admin-dashboard" className="flex items-center space-x-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
+            <Shield className="h-4 w-4" />
+            <span className="text-sm font-medium">{t('header.adminPanel')}</span>
+          </Link>
+        );
+      case 'place':
+        return (
+          <Link to="/place-dashboard" className="flex items-center space-x-2 px-3 py-2 bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition-colors">
+            <Building className="h-4 w-4" />
+            <span className="text-sm font-medium">{t('header.therapistDashboard')}</span>
+          </Link>
+        );
+      case 'therapist':
+        return (
+          <Link to="/therapist-dashboard" className="flex items-center space-x-2 px-3 py-2 bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition-colors">
+            <LayoutDashboard className="h-4 w-4" />
+            <span className="text-sm font-medium">{t('header.therapistDashboard')}</span>
+          </Link>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-40 w-full">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,24 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center space-x-4">
             {currentUser ? (
               <div className="flex items-center space-x-3">
-                {currentUser.userType === 'admin' ? (
-                  <Link
-                    to="/admin-dashboard"
-                    className="flex items-center space-x-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                  >
-                    <Shield className="h-4 w-4" />
-                    <span className="text-sm font-medium">{t('header.adminPanel')}</span>
-                  </Link>
-                ) : (
-                  <Link
-                    to="/therapist-dashboard"
-                    className="flex items-center space-x-2 px-3 py-2 bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition-colors"
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    <span className="text-sm font-medium">{t('header.therapistDashboard')}</span>
-                  </Link>
-                )}
-                
+                {getDashboardLink()}
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium text-gray-700 hidden md:block">
                     {currentUser.name}
