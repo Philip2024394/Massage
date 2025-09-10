@@ -93,7 +93,7 @@ const TherapistsTable = ({ therapists, onUpdateTherapistStatus, t }: any) => (
           <tbody className="bg-white divide-y divide-gray-200">
             {therapists.map((therapist: TherapistProfile) => (
               <tr key={therapist.id}>
-                <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center"><div className="flex-shrink-0 h-10 w-10"><img className="h-10 w-10 rounded-full object-cover" src={therapist.profileImage} alt={therapist.name} /></div><div className="ml-4"><div className="text-sm font-medium text-gray-900">{therapist.name}</div><div className="text-sm text-gray-500">{therapist.location.city}</div></div></div></td>
+                <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center"><div className="flex-shrink-0 h-10 w-10"><img className="h-10 w-10 rounded-full object-cover" src={therapist.profileImageUrl} alt={therapist.name} /></div><div className="ml-4"><div className="text-sm font-medium text-gray-900">{therapist.name}</div><div className="text-sm text-gray-500">{therapist.location.city}</div></div></div></td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{therapist.phone}</td>
                 <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${therapist.status === 'active' ? 'bg-green-100 text-green-800' : therapist.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{t(`adminDashboard.${therapist.status}`)}</span></td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{therapist.rating}</td>

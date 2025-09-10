@@ -43,7 +43,7 @@ export function generateMockTherapists(count: number = 20): TherapistProfile[] {
       id: faker.string.uuid(),
       name: `${person.firstName} ${person.lastName}`,
       email: faker.internet.email({ firstName: person.firstName, lastName: person.lastName }).toLowerCase(),
-      profileImage: `https://images.unsplash.com/photo-${faker.helpers.arrayElement([
+      profileImageUrl: `https://images.unsplash.com/photo-${faker.helpers.arrayElement([
         '1494790108755-2842c96eeaa4',
         '1559839734-2b71ea197ec2',
         '1582750433-a4a4c9bb2dd4',
@@ -74,7 +74,8 @@ export function generateMockTherapists(count: number = 20): TherapistProfile[] {
       massageTypes: selectedMassageTypes,
       phone: `+6281${faker.string.numeric(9)}`,
       languages: faker.helpers.arrayElements(['English', 'Spanish', 'Mandarin', 'French', 'German', 'Indonesian', 'Bahasa Indonesia'], { min: 1, max: 2 }),
-      certifications: ['Licensed Massage Therapist']
+      certifications: ['Licensed Massage Therapist'],
+      therapistNumber: faker.string.alphanumeric(8).toUpperCase(),
     };
   });
 }

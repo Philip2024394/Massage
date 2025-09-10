@@ -5,7 +5,7 @@
     "indonesian": "Indonesia"
   },
   "header": {
-    "brand": "2Go Massage Hub",
+    "brand": "2Go Massage",
     "therapistDashboard": "Dasbor",
     "adminPanel": "Panel Admin",
     "therapistLogin": "Login Terapis",
@@ -31,7 +31,7 @@
     "services": "Layanan",
     "more": "+{{count}} lagi",
     "pricing": "Harga",
-    "packageDetails": "Detail Paket",
+    "packageDetails": "Perjanjian Layanan",
     "session_60": "60 menit",
     "session_90": "90 menit",
     "session_120": "120 menit",
@@ -52,7 +52,6 @@
     "error": "Tidak dapat menemukan lokasi Anda. Silakan coba lagi.",
     "gettingLocation": "Mendapatkan Lokasi...",
     "useCurrentLocation": "Gunakan Lokasi Saat Ini",
-    "useDemoLocation": "Gunakan San Francisco (Demo)",
     "errors": {
       "permissionDenied": "Akses lokasi ditolak. Harap aktifkan izin lokasi di pengaturan browser Anda.",
       "positionUnavailable": "Lokasi Anda tidak dapat ditentukan. Harap periksa koneksi jaringan Anda.",
@@ -93,7 +92,7 @@
       "emailRequired": "Email wajib diisi",
       "passwordRequired": "Kata sandi wajib diisi",
       "nameRequired": "Nama lengkap wajib diisi",
-      "phoneRequired": "Nomor telepon wajib diisi",
+      "phoneRequired": "Nomor WhatsApp wajib diisi",
       "phoneFormat": "Nomor telepon harus 9-13 digit.",
       "whatsappNotVerified": "Harap verifikasi nomor WhatsApp Anda sebelum mendaftar.",
       "therapistNumberRequired": "Nomor terapis wajib diisi",
@@ -101,7 +100,7 @@
       "experienceMin": "Pengalaman tidak boleh negatif",
       "confirmRequired": "Harap konfirmasi kata sandi Anda",
       "passwordMismatch": "Kata sandi tidak cocok",
-      "invalidCredentials": "Email atau kata sandi tidak valid. Silakan coba lagi."
+      "invalidCredentials": "Nomor WhatsApp atau kata sandi tidak valid."
     }
   },
   "therapistDashboard": {
@@ -180,30 +179,28 @@
     "title": "Ketentuan Layanan",
     "lastUpdated": "Terakhir Diperbarui: 26 Oktober 2025",
     "introductionTitle": "1. Pendahuluan",
-    "introductionContent": "Selamat datang di 2Go Massage Hub. Ketentuan Layanan ini mengatur penggunaan platform kami yang menghubungkan pengguna dengan para profesional terapi pijat independen. Dengan menggunakan layanan kami, Anda menyetujui ketentuan ini secara penuh.",
-    "serviceDescriptionTitle": "2. Deskripsi Layanan",
-    "serviceDescriptionContent": "2Go Massage Hub adalah platform untuk menemukan dan menghubungi terapis pijat independen. Kami bukan pemberi kerja terapis, dan kami tidak menyediakan layanan pijat sendiri. Kami bertindak sebagai tempat netral bagi terapis untuk memasarkan layanan mereka. Setiap perjanjian untuk menyediakan layanan pijat adalah sepenuhnya antara pengguna dan terapis.",
+    "introductionContent": "Selamat datang di 2Go Massage. Ketentuan Layanan ini mengatur penggunaan platform kami yang menghubungkan pengguna dengan para profesional terapi pijat independen. Dengan menggunakan layanan kami, Anda menyetujui ketentuan ini secara penuh.",
+    "serviceDescriptionTitle": "2. Peran Platform & Deskripsi Layanan",
+    "serviceDescriptionContent": "2Go Massage adalah platform iklan untuk menemukan dan menghubungi terapis pijat independen. Kami bukan pemberi kerja terapis dan tidak menyediakan layanan pijat sendiri. Kami bertindak sebagai tempat netral bagi terapis untuk mengiklankan layanan mereka. 2Go Massage tidak bertanggung jawab atas masalah, perselisihan, atau interaksi apa pun yang terjadi antara pelanggan dan terapis. Setiap perjanjian untuk menyediakan layanan pijat adalah sepenuhnya antara pengguna dan terapis.",
     "userResponsibilitiesTitle": "3. Tanggung Jawab Pengguna",
     "userResponsibilitiesContent": "Anda setuju untuk menyediakan lingkungan yang aman dan pantas bagi terapis. Anda harus memperlakukan terapis dengan hormat dan profesionalisme. Segala bentuk pelecehan, penyalahgunaan, atau aktivitas ilegal dilarang keras dan akan mengakibatkan larangan permanen dari platform.",
     "therapistResponsibilitiesTitle": "4. Tanggung Jawab Terapis",
     "therapistResponsibilitiesContent": "Terapis adalah kontraktor independen yang bertanggung jawab atas lisensi, asuransi, dan kepatuhan mereka sendiri terhadap semua hukum setempat. Terapis harus secara akurat mewakili keterampilan, kualifikasi, dan layanan mereka. Perilaku profesional diperlukan setiap saat.",
     "disclaimerTitle": "5. Penafian dan Batasan Tanggung Jawab",
-    "disclaimerContent": "2Go Massage Hub disediakan 'sebagaimana adanya'. Kami tidak memberikan jaminan mengenai perilaku pengguna atau terapis. Kami tidak bertanggung jawab atas sengketa, cedera, atau kerusakan apa pun yang mungkin timbul dari interaksi antara pengguna dan terapis. Keselamatan Anda adalah tanggung jawab Anda sendiri.",
+    "disclaimerContent": "2Go Massage disediakan 'sebagaimana adanya'. Kami tidak memberikan jaminan mengenai perilaku pengguna atau terapis dan bukan merupakan pihak dalam perjanjian apa pun di antara mereka. Kami tidak bertanggung jawab atas sengketa, cedera, atau kerusakan apa pun yang mungkin timbul dari interaksi yang difasilitasi melalui platform. Keselamatan Anda adalah tanggung jawab Anda sendiri saat menggunakan penyedia layanan.",
     "changesToTermsTitle": "6. Perubahan Ketentuan",
     "changesToTermsContent": "Kami dapat mengubah ketentuan ini kapan saja. Kami akan memberitahu pengguna tentang perubahan apa pun, dan penggunaan platform yang berkelanjutan merupakan penerimaan terhadap ketentuan baru."
   },
   "packageDetailsPage": {
     "backToHome": "Kembali ke Beranda",
-    "mainTitle": "Komitmen Kami terhadap Kualitas & Profesionalisme",
-    "subtitle": "Apa yang Diharapkan dari Setiap Pengalaman 2Go Massage Hub",
-    "materialsTitle": "Materi Premium dan Bersertifikat",
-    "materialsContent": "Semua minyak pijat telah diuji secara dermatologis dan diatur kualitasnya. Lilin beraroma digunakan untuk suasana terapeutik. Terapis menggunakan sprei merek 2Go yang dicuci secara profesional, handuk bersih, dan produk perawatan kulit bersertifikat.",
-    "standardTitle": "Standar Profesional 2Go",
-    "standardContent": "Setiap terapis telah melalui proses seleksi yang ketat untuk pelatihan dan profesionalisme. Mereka akan tiba dengan mengenakan kaos merek 2Go dengan semua peralatan yang diperlukan dalam tas 2Go yang ditunjuk, memastikan layanan yang konsisten dan berkualitas tinggi.",
-    "rightsTitle": "Hak dan Ketenangan Pikiran Anda",
-    "rightsContent": "Jika standar layanan atau item kami tidak terpenuhi, Anda berhak membatalkan sesi sebelum dimulai, tanpa penalti. Kami menghargai masukan Anda untuk menjaga kualitas kami.",
-    "safetyTitle": "Saling Menghormati dan Keselamatan",
-    "safetyContent": "Keselamatan terapis kami adalah yang utama. Seorang terapis memiliki hak mutlak untuk membatalkan layanan jika mereka merasa tidak aman, tidak nyaman, atau jika ada orang tambahan yang tidak diumumkan. Kami beroperasi atas dasar saling menghormati."
+    "mainTitle": "Perjanjian Layanan",
+    "subtitle": "Memahami persyaratan untuk pengalaman yang aman dan profesional.",
+    "paymentTitle": "Kebijakan Pembayaran",
+    "paymentContent": "Pembayaran penuh harus dilakukan pada saat kedatangan terapis, sebelum sesi dimulai. Pembayaran dapat dilakukan secara tunai atau transfer bank langsung. Harap siapkan metode pembayaran pilihan Anda.",
+    "cancellationTitle": "Kebijakan Pembatalan & Keselamatan",
+    "cancellationContent": "Baik klien maupun terapis berhak membatalkan sesi kapan saja dengan alasan apa pun. Terapis akan segera menghentikan layanan jika merasa tidak aman, tidak nyaman, jika klien telah mengonsumsi alkohol, atau jika ada orang tambahan yang tidak diumumkan di area layanan. Hal ini tidak dapat ditawar untuk memastikan keselamatan para profesional kami.",
+    "serviceStandardTitle": "Standar Layanan & Umpan Balik",
+    "serviceStandardContent": "Jika layanan pijat tidak sesuai standar yang disyaratkan, Anda berhak mengakhiri sesi. Kami mendorong peringkat jujur dengan penjelasan yang jelas tentang pengalaman dan preferensi Anda. Jangan ragu untuk berkomunikasi dengan terapis Anda kapan saja selama pijat untuk memastikan kenyamanan dan kepuasan Anda."
   },
   "services": {
     "massage": {

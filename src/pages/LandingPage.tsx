@@ -11,9 +11,9 @@ export const LandingPage: React.FC = () => {
   return (
     <div 
       className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-cover bg-center overflow-hidden relative"
-      style={{ backgroundImage: "url('https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1920&q=80')" }}
+      style={{ backgroundImage: "url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80')" }}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       
       <div className="relative z-10 text-center flex flex-col items-center">
         <motion.div
