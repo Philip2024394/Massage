@@ -12,7 +12,7 @@ export const Logo: React.FC<LogoProps> = ({ className = 'h-16 w-auto', layout = 
       <div className="flex items-center">
         <svg
           className={className}
-          viewBox="0 0 340 50"
+          viewBox="0 0 250 50"
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
@@ -36,12 +36,12 @@ export const Logo: React.FC<LogoProps> = ({ className = 'h-16 w-auto', layout = 
             2Go
           </text>
           <text
-            x="85"
+            x="75"
             y="35"
             className="brand-light-h"
             fill="#374151"
           >
-            Massage Hub
+            Massage
           </text>
         </svg>
       </div>
@@ -52,19 +52,19 @@ export const Logo: React.FC<LogoProps> = ({ className = 'h-16 w-auto', layout = 
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
       <svg
-        viewBox="0 0 300 120"
-        className="w-64 h-auto drop-shadow-lg"
+        viewBox="0 0 220 120"
+        className="w-48 h-auto drop-shadow-lg"
         xmlns="http://www.w3.org/2000/svg"
       >
         <style>
-          {`.brand-text { font-family: 'Inter', system-ui, sans-serif; font-size: 110px; font-weight: 800; fill: #22c55e; }`}
+          {`.brand-text { font-family: 'Inter', system-ui, sans-serif; font-size: 90px; font-weight: 800; fill: #22c55e; }`}
         </style>
-        <text x="0" y="100" className="brand-text">
+        <text x="0" y="95" className="brand-text">
           2Go
         </text>
       </svg>
       <h2 className="text-5xl font-light tracking-wider mt-2 animate-glow">
-        Massage Hub
+        Massage
       </h2>
     </div>
   );

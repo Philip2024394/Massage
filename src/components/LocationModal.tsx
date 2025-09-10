@@ -53,16 +53,6 @@ export const LocationModal: React.FC<LocationModalProps> = ({
     }
   };
 
-  const handleManualLocation = () => {
-    const location: UserLocation = {
-      lat: 37.7749,
-      lng: -122.4194,
-      address: 'San Francisco, CA'
-    };
-    onLocationSet(location);
-    onClose();
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -94,9 +84,6 @@ export const LocationModal: React.FC<LocationModalProps> = ({
                 <button onClick={handleGetCurrentLocation} disabled={loading} className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50">
                   {loading ? <Loader className="h-5 w-5 animate-spin" /> : <MapPin className="h-5 w-5" />}
                   <span>{loading ? t('locationModal.gettingLocation') : t('locationModal.useCurrentLocation')}</span>
-                </button>
-                <button onClick={handleManualLocation} className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                  {t('locationModal.useDemoLocation')}
                 </button>
               </div>
             </div>

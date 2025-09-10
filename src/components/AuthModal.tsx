@@ -4,23 +4,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from '../hooks/useTranslation';
 import { getWhatsAppUrl } from '../utils/location';
-import { AuthError } from '@supabase/supabase-js';
-import { supabase } from '../supabaseClient';
+
+export interface LoginForm { phone: string; password: string; }
+export interface RegisterForm { name: string; password: string; confirmPassword: string; phone: string; therapistNumber: string; experience: number; }
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLogin: (email: string, password: string) => Promise<{ success: boolean, error?: AuthError }>;
-  onRegister: (data: RegisterForm) => Promise<{ success: boolean, error?: AuthError }>;
+  onLogin: (data: LoginForm) => string | void;
+  onRegister: (data: RegisterForm) => void;
 }
 
-interface LoginForm { email: string; password: string; }
-export interface RegisterForm extends LoginForm { name: string; confirmPassword: string; phone: string; therapistNumber: string; experience: number; }
-
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, onRegister }) => {
-  const [view, setView] = useState<'login' | 'register' | 'forgotPassword'>('login');
+  const [view, setView] = useState<'login' | 'register'>('login');
   const [authError, setAuthError] = useState<string | null>(null);
-  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [verificationAttempted, setVerificationAttempted] = useState(false);
   const [isWhatsAppVerified, setIsWhatsAppVerified] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -30,22 +28,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, 
   
   const loginForm = useForm<LoginForm>();
   const registerForm = useForm<RegisterForm>();
-  const forgotPasswordForm = useForm<{ email: string }>();
   
   const watchedPhone = useWatch({ control: registerForm.control, name: 'phone' });
 
-  const handleLoginSubmit = async (data: LoginForm) => {
+  const handleLoginSubmit = (data: LoginForm) => {
     setAuthError(null);
-    const { success, error } = await onLogin(data.email, data.password);
-    if (!success) {
-      setAuthError(error?.message || t('authModal.errors.invalidCredentials'));
+    const error = onLogin(data);
+    if (error) {
+      setAuthError(t('authModal.errors.invalidCredentials'));
     } else {
       loginForm.reset();
-      onClose();
     }
   };
 
-  const handleRegisterSubmit = async (data: RegisterForm) => {
+  const handleRegisterSubmit = (data: RegisterForm) => {
     setAuthError(null);
     if (!isWhatsAppVerified) {
       setAuthError(t('authModal.errors.whatsappNotVerified'));
@@ -56,66 +52,34 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, 
       return;
     }
     
-    const registrationData = { ...data, phone: `+62${data.phone}` };
-    const { success, error } = await onRegister(registrationData);
-
-    if (success) {
-      registerForm.reset();
-      setVerificationAttempted(false);
-      setIsWhatsAppVerified(false);
-      onClose();
-    } else {
-      setAuthError(error?.message || "Registration failed.");
-    }
-  };
-  
-  const handlePasswordReset = async (data: { email: string }) => {
-    setAuthError(null);
-    setResetMessage(null);
-    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/`,
-    });
-    if (error) {
-      setAuthError(error.message);
-    } else {
-      setResetMessage(t('authModal.resetLinkSent'));
-    }
+    onRegister(data);
+    setAuthMessage("Registration successful! Your application is now pending review.");
+    setView('login');
+    registerForm.reset();
   };
 
   const handleVerifyWhatsApp = () => {
     const phone = registerForm.getValues('phone');
     if (phone && !registerForm.formState.errors.phone) {
       const fullPhone = `+62${phone}`;
-      const whatsappUrl = getWhatsAppUrl(fullPhone, `Hi, I'm verifying my number for 2Go Massage Hub.`);
+      const whatsappUrl = getWhatsAppUrl(fullPhone, `Hi, I'm verifying my number for Jogja Massage Hub.`);
       window.open(whatsappUrl, '_blank');
       setVerificationAttempted(true);
     }
   };
 
-  const switchView = (newView: 'login' | 'register' | 'forgotPassword') => {
+  const switchView = (newView: 'login' | 'register') => {
     setView(newView);
     setAuthError(null);
-    setResetMessage(null);
+    setAuthMessage(null);
     loginForm.reset();
     registerForm.reset();
-    forgotPasswordForm.reset();
     setVerificationAttempted(false);
     setIsWhatsAppVerified(false);
   };
 
   const renderContent = () => {
     switch (view) {
-      case 'forgotPassword':
-        return (
-          <form onSubmit={forgotPasswordForm.handleSubmit(handlePasswordReset)} className="space-y-4">
-            <h3 className="text-xl leading-6 font-semibold text-gray-900 mb-4">{t('authModal.resetPasswordTitle')}</h3>
-            {resetMessage && <p className="text-green-600 text-sm text-center bg-green-50 p-2 rounded-lg">{resetMessage}</p>}
-            {authError && <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">{authError}</p>}
-            <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('authModal.emailLabel')}</label><input type="email" {...forgotPasswordForm.register('email', { required: t('authModal.errors.emailRequired') })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder={t('authModal.emailPlaceholder')} />{forgotPasswordForm.formState.errors.email && <p className="text-red-500 text-xs mt-1">{forgotPasswordForm.formState.errors.email.message}</p>}</div>
-            <button type="submit" disabled={forgotPasswordForm.formState.isSubmitting} className="w-full bg-primary-500 text-white py-3 px-4 rounded-lg hover:bg-primary-600 font-medium disabled:opacity-50">{t('authModal.sendResetLink')}</button>
-            <div className="mt-6 text-center"><button type="button" onClick={() => switchView('login')} className="text-sm text-primary-600 hover:text-primary-700 font-medium">{t('authModal.backToLogin')}</button></div>
-          </form>
-        );
       case 'register':
         return (
           <>
@@ -123,7 +87,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, 
             <form onSubmit={registerForm.handleSubmit(handleRegisterSubmit)} className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 mt-6">
               {authError && <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">{authError}</p>}
               <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('authModal.fullNameLabel')}</label><input type="text" {...registerForm.register('name', { required: t('authModal.errors.nameRequired') })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder={t('authModal.fullNamePlaceholder')} />{registerForm.formState.errors.name && <p className="text-red-500 text-xs mt-1">{registerForm.formState.errors.name.message}</p>}</div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('authModal.emailLabel')}</label><input type="email" {...registerForm.register('email', { required: t('authModal.errors.emailRequired') })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder={t('authModal.emailPlaceholder')} />{registerForm.formState.errors.email && <p className="text-red-500 text-xs mt-1">{registerForm.formState.errors.email.message}</p>}</div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('authModal.phoneLabel')}</label>
                 <div className="flex items-center"><span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">+62</span><input type="tel" {...registerForm.register('phone', { required: t('authModal.errors.phoneRequired'), pattern: { value: /^\d{9,13}$/, message: t('authModal.errors.phoneFormat') }})} onChange={(e) => { registerForm.setValue('phone', e.target.value, { shouldValidate: true }); setVerificationAttempted(false); setIsWhatsAppVerified(false); setAuthError(null); }} className="w-full px-3 py-2 border border-gray-300 rounded-r-lg" placeholder={t('authModal.phonePlaceholder')} /></div>
@@ -146,9 +109,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, 
             <h3 className="text-xl leading-6 font-semibold text-gray-900">{t('authModal.therapistLogin')}</h3>
             <form onSubmit={loginForm.handleSubmit(handleLoginSubmit)} className="space-y-4 mt-6">
               {authError && <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">{authError}</p>}
-              <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('authModal.emailLabel')}</label><input type="email" {...loginForm.register('email', { required: t('authModal.errors.emailRequired') })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder={t('authModal.emailPlaceholder')} />{loginForm.formState.errors.email && <p className="text-red-500 text-xs mt-1">{loginForm.formState.errors.email.message}</p>}</div>
+              {authMessage && <p className="text-green-600 text-sm text-center bg-green-50 p-2 rounded-lg">{authMessage}</p>}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('authModal.phoneLabel')}</label>
+                <div className="flex items-center">
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">+62</span>
+                  <input type="tel" {...loginForm.register('phone', { required: t('authModal.errors.phoneRequired') })} className="w-full px-3 py-2 border border-gray-300 rounded-r-lg" placeholder={t('authModal.phonePlaceholder')} />
+                </div>
+                {loginForm.formState.errors.phone && <p className="text-red-500 text-xs mt-1">{loginForm.formState.errors.phone.message as string}</p>}
+              </div>
               <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('authModal.passwordLabel')}</label><div className="relative"><input type={showPassword ? 'text' : 'password'} {...loginForm.register('password', { required: t('authModal.errors.passwordRequired') })} className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-10" placeholder={t('authModal.passwordPlaceholder')} /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500">{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button></div>{loginForm.formState.errors.password && <p className="text-red-500 text-xs mt-1">{loginForm.formState.errors.password.message}</p>}</div>
-              <div className="text-right"><button type="button" onClick={() => switchView('forgotPassword')} className="text-sm text-primary-600 hover:underline">{t('authModal.forgotPassword')}</button></div>
               <button type="submit" disabled={loginForm.formState.isSubmitting} className="w-full bg-primary-500 text-white py-3 px-4 rounded-lg hover:bg-primary-600 font-medium disabled:opacity-50">{t('authModal.loginButton')}</button>
               <div className="mt-6 text-center"><button type="button" onClick={() => switchView('register')} className="text-sm text-primary-600 hover:text-primary-700 font-medium">{t('needToRegister')}</button></div>
             </form>

@@ -1,7 +1,7 @@
 export interface TherapistProfile {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   profileImageUrl: string;
   rating: number;
   reviewCount: number;
@@ -47,7 +47,7 @@ export interface FilterOptions {
 
 export interface User {
   id: string;
-  email: string;
+  phone: string;
   name: string;
   userType: 'therapist' | 'admin';
   profileImage?: string;

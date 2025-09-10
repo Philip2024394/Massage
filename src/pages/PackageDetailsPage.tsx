@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, ShieldCheck, Droplet, Shirt } from 'lucide-react';
+import { Home, ShieldAlert, Banknote, Star } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { Logo } from '../components/Logo';
 
@@ -32,29 +32,24 @@ export const PackageDetailsPage: React.FC = () => {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 max-w-md">{t('packageDetailsPage.mainTitle')}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('packageDetailsPage.mainTitle')}</h1>
           <p className="text-sm text-gray-500 mb-8">{t('packageDetailsPage.subtitle')}</p>
           
           <div className="space-y-10">
             <DetailSection 
-              icon={<Droplet className="h-6 w-6" />}
-              title={t('packageDetailsPage.materialsTitle')}
-              content={t('packageDetailsPage.materialsContent')}
+              icon={<Banknote className="h-6 w-6" />}
+              title={t('packageDetailsPage.paymentTitle')}
+              content={t('packageDetailsPage.paymentContent')}
             />
             <DetailSection 
-              icon={<Shirt className="h-6 w-6" />}
-              title={t('packageDetailsPage.standardTitle')}
-              content={t('packageDetailsPage.standardContent')}
+              icon={<ShieldAlert className="h-6 w-6" />}
+              title={t('packageDetailsPage.cancellationTitle')}
+              content={t('packageDetailsPage.cancellationContent')}
             />
             <DetailSection 
-              icon={<ShieldCheck className="h-6 w-6" />}
-              title={t('packageDetailsPage.rightsTitle')}
-              content={t('packageDetailsPage.rightsContent')}
-            />
-             <DetailSection 
-              icon={<ShieldCheck className="h-6 w-6" />}
-              title={t('packageDetailsPage.safetyTitle')}
-              content={t('packageDetailsPage.safetyContent')}
+              icon={<Star className="h-6 w-6" />}
+              title={t('packageDetailsPage.serviceStandardTitle')}
+              content={t('packageDetailsPage.serviceStandardContent')}
             />
           </div>
         </div>

@@ -3,7 +3,13 @@ import { X, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from '../hooks/useTranslation';
-import { ReviewFormData } from '../App';
+
+export interface ReviewFormData {
+  customerName: string;
+  customerWhatsApp: string;
+  rating: number;
+  comment: string;
+}
 
 interface SubmitReviewModalProps {
   isOpen: boolean;
@@ -76,7 +82,7 @@ export const SubmitReviewModal: React.FC<SubmitReviewModalProps> = ({ isOpen, on
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{t('submitReview.nameLabel')}</label>
                     <input type="text" {...register('customerName', { required: t('submitReview.errors.nameRequired') })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder={t('submitReview.namePlaceholder')} />
-                    {errors.customerName && <p className="text-red-500 text-xs mt-1">{errors.customerName.message}</p>}
+                    {errors.customerName && <p className="text-red-500 text-xs mt-1">{errors.customerName.message as string}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{t('submitReview.whatsappLabel')}</label>
@@ -84,12 +90,12 @@ export const SubmitReviewModal: React.FC<SubmitReviewModalProps> = ({ isOpen, on
                         <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">+62</span>
                         <input type="tel" {...register('customerWhatsApp', { required: t('submitReview.errors.whatsappRequired') })} className="w-full px-3 py-2 border border-gray-300 rounded-r-lg" placeholder={t('submitReview.whatsappPlaceholder')} />
                     </div>
-                    {errors.customerWhatsApp && <p className="text-red-500 text-xs mt-1">{errors.customerWhatsApp.message}</p>}
+                    {errors.customerWhatsApp && <p className="text-red-500 text-xs mt-1">{errors.customerWhatsApp.message as string}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{t('submitReview.commentLabel')}</label>
                     <textarea {...register('comment', { required: t('submitReview.errors.commentRequired') })} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder={t('submitReview.commentPlaceholder')} />
-                    {errors.comment && <p className="text-red-500 text-xs mt-1">{errors.comment.message}</p>}
+                    {errors.comment && <p className="text-red-500 text-xs mt-1">{errors.comment.message as string}</p>}
                   </div>
                   <div className="pt-2">
                     <button type="submit" className="w-full bg-primary-500 text-white py-3 px-4 rounded-lg hover:bg-primary-600 font-medium">{t('submitReview.submitButton')}</button>

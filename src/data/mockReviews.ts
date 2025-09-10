@@ -1,12 +1,9 @@
 import { faker } from '@faker-js/faker';
-import { Review } from '../types';
-// Corrected import: Import the function, not a non-existent variable.
-import { generateMockTherapists } from './mockTherapists';
+import { Review, TherapistProfile } from '../types';
 
-export function generateMockReviews(count: number): Review[] {
+export function generateMockReviews(count: number, therapists: TherapistProfile[]): Review[] {
   const reviews: Review[] = [];
-  // Call the function to get the list of therapists.
-  const therapists = generateMockTherapists(20); // Generate a list to pick from.
+  if (therapists.length === 0) return [];
 
   for (let i = 0; i < count; i++) {
     const therapist = faker.helpers.arrayElement(therapists);
@@ -23,5 +20,3 @@ export function generateMockReviews(count: number): Review[] {
   }
   return reviews;
 }
-
-export const mockReviews = generateMockReviews(50);

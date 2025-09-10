@@ -5,7 +5,7 @@
     "indonesian": "Indonesian"
   },
   "header": {
-    "brand": "2Go Massage Hub",
+    "brand": "2Go Massage",
     "therapistDashboard": "Dashboard",
     "adminPanel": "Admin Panel",
     "therapistLogin": "Therapist Login",
@@ -31,7 +31,7 @@
     "services": "Services",
     "more": "+{{count}} more",
     "pricing": "Pricing",
-    "packageDetails": "Package Details",
+    "packageDetails": "Service Agreement",
     "session_60": "60 min",
     "session_90": "90 min",
     "session_120": "120 min",
@@ -52,7 +52,6 @@
     "error": "Unable to get your location. Please try again.",
     "gettingLocation": "Getting Location...",
     "useCurrentLocation": "Use Current Location",
-    "useDemoLocation": "Use San Francisco (Demo)",
     "errors": {
       "permissionDenied": "Location access denied. Please enable location permissions in your browser settings.",
       "positionUnavailable": "Your location could not be determined. Please check your network connection.",
@@ -93,7 +92,7 @@
       "emailRequired": "Email is required",
       "passwordRequired": "Password is required",
       "nameRequired": "Full name is required",
-      "phoneRequired": "Phone number is required",
+      "phoneRequired": "WhatsApp number is required",
       "phoneFormat": "Phone number should be 9-13 digits.",
       "whatsappNotVerified": "Please verify your WhatsApp number before registering.",
       "therapistNumberRequired": "Therapist number is required",
@@ -101,7 +100,7 @@
       "experienceMin": "Experience cannot be negative",
       "confirmRequired": "Please confirm your password",
       "passwordMismatch": "Passwords do not match",
-      "invalidCredentials": "Invalid email or password. Please try again."
+      "invalidCredentials": "Invalid WhatsApp number or password."
     }
   },
   "therapistDashboard": {
@@ -180,30 +179,28 @@
     "title": "Terms of Service",
     "lastUpdated": "Last Updated: October 26, 2025",
     "introductionTitle": "1. Introduction",
-    "introductionContent": "Welcome to 2Go Massage Hub. These Terms of Service govern your use of our platform that connects users with independent massage therapy professionals. By using our service, you agree to these terms in full.",
-    "serviceDescriptionTitle": "2. Service Description",
-    "serviceDescriptionContent": "2Go Massage Hub is a platform for discovering and contacting independent massage therapists. We are not an employer of therapists, and we do not provide massage services ourselves. We act as a neutral venue for therapists to market their services. Any agreement to provide massage services is strictly between the user and the therapist.",
+    "introductionContent": "Welcome to 2Go Massage. These Terms of Service govern your use of our platform that connects users with independent massage therapy professionals. By using our service, you agree to these terms in full.",
+    "serviceDescriptionTitle": "2. Platform Role & Service Description",
+    "serviceDescriptionContent": "2Go Massage is an advertising platform for discovering and contacting independent massage therapists. We are not an employer of therapists and do not provide massage services ourselves. We act as a neutral venue for therapists to advertise their services. 2Go Massage is not responsible for any issues, disputes, or interactions that occur between the customer and the therapist. Any agreement to provide massage services is strictly between the user and the therapist.",
     "userResponsibilitiesTitle": "3. User Responsibilities",
     "userResponsibilitiesContent": "You agree to provide a safe and appropriate environment for the therapist. You must treat therapists with respect and professionalism. Any form of harassment, abuse, or illegal activity is strictly prohibited and will result in a permanent ban from the platform.",
     "therapistResponsibilitiesTitle": "4. Therapist Responsibilities",
     "therapistResponsibilitiesContent": "Therapists are independent contractors responsible for their own licensing, insurance, and compliance with all local laws. Therapists must accurately represent their skills, qualifications, and services. Professional conduct is required at all times.",
     "disclaimerTitle": "5. Disclaimers and Limitation of Liability",
-    "disclaimerContent": "2Go Massage Hub is provided 'as is'. We make no warranties regarding the conduct of users or therapists. We are not responsible for any disputes, injuries, or damages that may arise from interactions between users and therapists. Your safety is your own responsibility.",
+    "disclaimerContent": "2Go Massage is provided 'as is'. We make no warranties regarding the conduct of users or therapists and are not a party to any agreement between them. We are not responsible for any disputes, injuries, or damages that may arise from interactions facilitated through the platform. Your safety is your own responsibility when engaging a service provider.",
     "changesToTermsTitle": "6. Changes to Terms",
     "changesToTermsContent": "We may modify these terms at any time. We will notify users of any changes, and continued use of the platform constitutes acceptance of the new terms."
   },
   "packageDetailsPage": {
     "backToHome": "Back to Home",
-    "mainTitle": "Our Commitment to Quality & Professionalism",
-    "subtitle": "What to Expect from Every 2Go Massage Hub Experience",
-    "materialsTitle": "Premium, Certified Materials",
-    "materialsContent": "All massage oils are dermatologically tested and regulated for quality. Scented candles are used for therapeutic ambiance. Therapists use professionally laundered, 2Go branded sheets, clean towels, and certified skincare products.",
-    "standardTitle": "The 2Go Professional Standard",
-    "standardContent": "Every therapist is rigorously vetted for training and professionalism. They will arrive in a branded 2Go T-shirt with all necessary equipment in a designated 2Go bag, ensuring a consistent, high-quality service.",
-    "rightsTitle": "Your Rights and Peace of Mind",
-    "rightsContent": "If our service standards or items are not met, you reserve the right to cancel the session before it begins, without penalty. We value your feedback to maintain our quality.",
-    "safetyTitle": "Mutual Respect and Safety",
-    "safetyContent": "The safety of our therapists is paramount. A therapist has the absolute right to cancel a service if they feel unsafe, uncomfortable, or if unannounced individuals are present. We operate on a foundation of mutual respect."
+    "mainTitle": "Service Agreement",
+    "subtitle": "Understanding the terms for a safe and professional experience.",
+    "paymentTitle": "Payment Policy",
+    "paymentContent": "Full payment is due upon the therapist's arrival, before the session begins. Payments can be made via cash or direct bank transfer. Please ensure payment is ready to avoid delays.",
+    "cancellationTitle": "Cancellation & Safety Policy",
+    "cancellationContent": "Both clients and therapists reserve the right to cancel a session at any time for any reason. A therapist will terminate the service immediately if they feel unsafe, uncomfortable, if the client has consumed alcohol, or if additional, unannounced individuals are present in the service area. This is non-negotiable and ensures the safety of our professionals.",
+    "serviceStandardTitle": "Service Standards & Feedback",
+    "serviceStandardContent": "If the massage service is not up to the required standards, you have the right to end the session. We encourage honest ratings with clear explanations of your experience and preferences. Please feel free to communicate with your therapist at any time during your massage to ensure your comfort and satisfaction."
   },
   "services": {
     "massage": {
