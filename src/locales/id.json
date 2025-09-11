@@ -8,17 +8,20 @@
     "brand": "2Go Massage",
     "therapistDashboard": "Dasbor",
     "adminPanel": "Panel Admin",
-    "therapistLogin": "Login Terapis",
+    "therapistLogin": "Login Akun",
     "logout": "Keluar"
   },
   "filterBar": {
     "onlineCount": "{{onlineCount}} dari {{totalCount}} terapis sedang online",
+    "placesOpenCount": "{{openCount}} dari {{totalCount}} tempat buka",
     "massageType": "Jenis Pijat",
     "typesSelected": "{{count}} jenis dipilih",
     "rating": "Peringkat",
     "clearSelection": "Hapus pilihan",
     "selectMassageTypes": "Pilih Jenis Pijat",
-    "closeDropdown": "Selesai"
+    "closeDropdown": "Selesai",
+    "homeService": "Layanan Rumah",
+    "massagePlaces": "Tempat Pijat"
   },
   "therapistCard": {
     "online": "Online",
@@ -35,12 +38,24 @@
     "session_60": "60 menit",
     "session_90": "90 menit",
     "session_120": "120 menit",
-    "contact": "Hubungi via WhatsApp",
+    "contact": "Hubungi",
     "viewReviews": "Lihat Ulasan"
+  },
+  "placeCard": {
+    "open": "Buka",
+    "closed": "Tutup",
+    "kmAway": "{{distance}} km lagi",
+    "reviews": "({{reviewCount}})",
+    "services": "Layanan",
+    "more": "+{{count}} lagi",
+    "contact": "Hubungi",
+    "viewDetails": "Lihat Detail",
+    "openToday": "Buka: {{open}} - {{close}}",
+    "closedToday": "Tutup Hari Ini"
   },
   "swipeable": {
     "counter": "{{currentIndex}} dari {{totalCount}}",
-    "noTherapists": "Terapis tidak ditemukan",
+    "noTherapists": "Tidak ada hasil ditemukan",
     "adjustFilters": "Coba sesuaikan filter atau lokasi Anda",
     "animatedHint": "Geser untuk menemukan!",
     "browseHint": "Atau gunakan panah untuk menelusuri",
@@ -48,7 +63,7 @@
   },
   "locationModal": {
     "title": "Atur Lokasi Anda",
-    "description": "Kami membutuhkan lokasi Anda untuk menemukan terapis pijat di dekat Anda.",
+    "description": "Kami membutuhkan lokasi Anda untuk menemukan layanan pijat di dekat Anda.",
     "error": "Tidak dapat menemukan lokasi Anda. Silakan coba lagi.",
     "gettingLocation": "Mendapatkan Lokasi...",
     "useCurrentLocation": "Gunakan Lokasi Saat Ini",
@@ -56,51 +71,6 @@
       "permissionDenied": "Akses lokasi ditolak. Harap aktifkan izin lokasi di pengaturan browser Anda.",
       "positionUnavailable": "Lokasi Anda tidak dapat ditentukan. Harap periksa koneksi jaringan Anda.",
       "timeout": "Tidak dapat menemukan lokasi Anda tepat waktu. Silakan coba lagi."
-    }
-  },
-  "authModal": {
-    "therapistLogin": "Login Terapis",
-    "therapistRegister": "Pendaftaran Terapis",
-    "accessTitle": "Akses Terapis",
-    "emailLabel": "Email",
-    "emailPlaceholder": "Masukkan email Anda",
-    "passwordLabel": "Kata Sandi",
-    "passwordPlaceholder": "Masukkan kata sandi Anda",
-    "loginButton": "Login sebagai Terapis",
-    "forgotPassword": "Lupa Kata Sandi?",
-    "resetPasswordTitle": "Atur Ulang Kata Sandi",
-    "sendResetLink": "Kirim Tautan Atur Ulang",
-    "resetLinkSent": "Tautan atur ulang kata sandi terkirim! Silakan periksa email Anda.",
-    "backToLogin": "Kembali ke Login",
-    "needToRegister": "Perlu mendaftar? Buat akun",
-    "alreadyHaveAccount": "Sudah punya akun? Login",
-    "fullNameLabel": "Nama Lengkap",
-    "fullNamePlaceholder": "Masukkan nama lengkap Anda",
-    "phoneLabel": "Nomor WhatsApp",
-    "phonePlaceholder": "81234567890",
-    "whatsappInfo": "Nomor Anda harus terhubung ke akun WhatsApp yang aktif.",
-    "verifyOnWhatsApp": "Verifikasi di WhatsApp",
-    "whatsappConfirmation": "Saya mengonfirmasi nomor WhatsApp saya benar dan aktif.",
-    "therapistNumberLabel": "Nomor Terapis",
-    "therapistNumberPlaceholder": "Masukkan nomor terapis resmi Anda",
-    "experienceLabel": "Pengalaman (Tahun)",
-    "experiencePlaceholder": "Pengalaman bertahun-tahun",
-    "confirmPasswordLabel": "Konfirmasi Kata Sandi",
-    "confirmPasswordPlaceholder": "Konfirmasi kata sandi Anda",
-    "registerButton": "Daftar sebagai Terapis",
-    "errors": {
-      "emailRequired": "Email wajib diisi",
-      "passwordRequired": "Kata sandi wajib diisi",
-      "nameRequired": "Nama lengkap wajib diisi",
-      "phoneRequired": "Nomor WhatsApp wajib diisi",
-      "phoneFormat": "Nomor telepon harus 9-13 digit.",
-      "whatsappNotVerified": "Harap verifikasi nomor WhatsApp Anda sebelum mendaftar.",
-      "therapistNumberRequired": "Nomor terapis wajib diisi",
-      "experienceRequired": "Pengalaman wajib diisi",
-      "experienceMin": "Pengalaman tidak boleh negatif",
-      "confirmRequired": "Harap konfirmasi kata sandi Anda",
-      "passwordMismatch": "Kata sandi tidak cocok",
-      "invalidCredentials": "Nomor WhatsApp atau kata sandi tidak valid."
     }
   },
   "therapistDashboard": {
@@ -114,7 +84,8 @@
     "uploadPhotoTitle": "Unggah foto baru",
     "fullName": "Nama Lengkap",
     "experience": "Pengalaman (Tahun)",
-    "phone": "Nomor Telepon",
+    "phone": "Nomor WhatsApp",
+    "testWhatsApp": "Tes",
     "city": "Kota",
     "bio": "Bio Profesional",
     "bioPlaceholder": "Ceritakan kepada klien tentang pengalaman dan pendekatan Anda terhadap terapi pijat...",
@@ -125,13 +96,42 @@
     "services": "Layanan Pijat yang Ditawarkan",
     "specialties": "Spesialisasi",
     "updateProfile": "Perbarui Profil",
-    "updateSuccess": "Profil berhasil diperbarui!"
+    "updateSuccess": "Profil berhasil diperbarui!",
+    "confirmLocation": "Konfirmasi Lokasi Saya",
+    "confirmLocationInfo": "Klik tombol untuk mengisi koordinat Anda secara otomatis berdasarkan lokasi Anda saat ini. Ini diperlukan untuk perhitungan jarak."
+  },
+  "placeDashboard": {
+    "status": "Status:",
+    "open": "Buka",
+    "closed": "Tutup",
+    "businessProfile": "Profil Bisnis",
+    "profileInfo": "Selalu perbarui detail bisnis Anda.",
+    "profilePhoto": "Foto Bisnis",
+    "updatePhoto": "Perbarui foto Anda untuk menampilkan tempat Anda.",
+    "uploadPhotoTitle": "Unggah foto baru",
+    "businessName": "Nama Bisnis",
+    "phone": "WhatsApp Bisnis",
+    "testWhatsApp": "Tes",
+    "address": "Alamat",
+    "city": "Kota",
+    "locationCoordinates": "Koordinat Lokasi",
+    "latitude": "Lintang",
+    "longitude": "Bujur",
+    "services": "Layanan yang Ditawarkan",
+    "languages": "Bahasa yang Digunakan",
+    "updateProfile": "Perbarui Profil",
+    "updateSuccess": "Profil berhasil diperbarui!",
+    "confirmLocation": "Konfirmasi Lokasi Saya",
+    "confirmLocationInfo": "Klik tombol untuk mengisi koordinat Anda secara otomatis berdasarkan lokasi Anda saat ini. Ini diperlukan untuk perhitungan jarak.",
+    "openingHours": "Jam Buka"
   },
   "adminDashboard": {
     "title": "Panel Admin",
     "manageTherapists": "Kelola Terapis",
+    "managePlaces": "Kelola Tempat",
     "manageReviews": "Kelola Ulasan",
     "therapist": "Terapis",
+    "place": "Tempat",
     "status": "Status",
     "rating": "Peringkat",
     "actions": "Tindakan",
@@ -139,6 +139,7 @@
     "blocked": "Diblokir",
     "pending": "Menunggu Persetujuan",
     "approve": "Setujui",
+    "reject": "Tolak",
     "whatsappNumber": "Nomor WhatsApp",
     "visibility": "Visibilitas",
     "reviewDetails": "Detail Ulasan",
@@ -150,10 +151,21 @@
   "reviewsPage": {
     "backToBrowse": "Kembali",
     "writeReview": "Tulis Ulasan",
-    "therapistNotFound": "Terapis tidak ditemukan.",
+    "therapistNotFound": "Profil tidak ditemukan.",
     "customerReviews": "Ulasan Pelanggan",
-    "noReviewsYet": "Belum ada ulasan untuk terapis ini.",
+    "noReviewsYet": "Belum ada ulasan.",
     "beTheFirst": "Jadilah yang pertama membagikan pengalaman Anda!"
+  },
+  "placeDetailsPage": {
+    "backToBrowse": "Kembali",
+    "writeReview": "Tulis Ulasan",
+    "placeNotFound": "Tempat tidak ditemukan.",
+    "customerReviews": "Ulasan Pelanggan",
+    "noReviewsYet": "Belum ada ulasan untuk tempat ini.",
+    "beTheFirst": "Jadilah yang pertama membagikan pengalaman Anda!",
+    "services": "Layanan yang Ditawarkan",
+    "languages": "Bahasa yang Digunakan",
+    "contact": "Kontak"
   },
   "submitReview": {
     "title": "Ulasan: {{name}}",
@@ -166,7 +178,7 @@
     "whatsappLabel": "Nomor WhatsApp Anda",
     "whatsappPlaceholder": "81234567890",
     "commentLabel": "Ulasan Anda",
-    "commentPlaceholder": "Bagikan detail pengalaman Anda dengan terapis ini.",
+    "commentPlaceholder": "Bagikan detail pengalaman Anda.",
     "submitButton": "Kirim Ulasan",
     "errors": {
       "ratingRequired": "Silakan pilih peringkat.",
@@ -202,9 +214,39 @@
     "serviceStandardTitle": "Standar Layanan & Umpan Balik",
     "serviceStandardContent": "Jika layanan pijat tidak sesuai standar yang disyaratkan, Anda berhak mengakhiri sesi. Kami mendorong peringkat jujur dengan penjelasan yang jelas tentang pengalaman dan preferensi Anda. Jangan ragu untuk berkomunikasi dengan terapis Anda kapan saja selama pijat untuk memastikan kenyamanan dan kepuasan Anda."
   },
+  "days": {
+    "monday": "Senin",
+    "tuesday": "Selasa",
+    "wednesday": "Rabu",
+    "thursday": "Kamis",
+    "friday": "Jumat",
+    "saturday": "Sabtu",
+    "sunday": "Minggu"
+  },
+  "languages": {
+    "english": "Inggris",
+    "indonesian": "Indonesia",
+    "mandarin": "Mandarin",
+    "japanese": "Jepang",
+    "korean": "Korea",
+    "german": "Jerman",
+    "french": "Prancis",
+    "dutch": "Belanda"
+  },
   "services": {
     "massage": {
       "swedish": "Pijat Swedia", "deepTissue": "Pijat Jaringan Dalam", "thai": "Pijat Thai", "hotStone": "Pijat Batu Panas", "aromatherapy": "Aromaterapi", "sports": "Pijat Olahraga", "prenatal": "Pijat Hamil", "reflexology": "Refleksi", "shiatsu": "Shiatsu", "triggerPoint": "Pijat Titik Pemicu", "indonesianTraditional": "Tradisional Indonesia", "balinese": "Pijat Bali", "javanese": "Pijat Jawa", "pijatUrut": "Pijat Urut", "kerok": "Kerokan", "coinRub": "Pijat Koin", "guasha": "Guasha Indonesia", "bekam": "Bekam", "pijatRefleksi": "Pijat Refleksi", "pijatTradisional": "Pijat Tradisional", "totokWajah": "Totok Wajah", "pijatIbuHamil": "Pijat Ibu Hamil", "pijatBayi": "Pijat Bayi", "pijatKesehatan": "Pijat Kesehatan"
+    },
+    "place": {
+      "salon": "Salon",
+      "nails": "Layanan Kuku",
+      "bodyScrubs": "Lulur Badan",
+      "bodyWraps": "Lulur Bungkus",
+      "facials": "Perawatan Wajah",
+      "aromatherapy": "Aromaterapi",
+      "reflexology": "Refleksi",
+      "saunaSteam": "Sauna / Ruang Uap",
+      "hotTubsJacuzzis": "Bak Air Panas / Jacuzzi"
     },
     "specialty": {
       "painRelief": "Pereda Nyeri", "stressReduction": "Pengurangan Stres", "sportsRecovery": "Pemulihan Olahraga", "pregnancyCare": "Perawatan Kehamilan", "injuryRehab": "Rehabilitasi Cedera", "relaxation": "Relaksasi", "chronicPain": "Nyeri Kronis", "flexibility": "Fleksibilitas", "circulation": "Sirkulasi", "wellness": "Kebugaran", "traditionalHealing": "Penyembuhan Tradisional", "energyBalance": "Keseimbangan Energi", "facial": "Pijat Wajah", "babyCare": "Perawatan Bayi", "maternalCare": "Perawatan Ibu"

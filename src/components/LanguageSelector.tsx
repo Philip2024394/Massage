@@ -22,7 +22,7 @@ export const LanguageSelector: React.FC = () => {
         onClick={() => handleLanguageSelect('en')}
         className="cursor-pointer group flex flex-col items-center gap-3"
       >
-        <EnglishFlag className="w-20 h-20" />
+        <EnglishFlag className="w-16 h-16" />
         <span className="font-semibold text-lg text-white opacity-80 group-hover:opacity-100 transition-opacity">{t('landingPage.english')}</span>
       </motion.div>
       <motion.div
@@ -31,7 +31,7 @@ export const LanguageSelector: React.FC = () => {
         onClick={() => handleLanguageSelect('id')}
         className="cursor-pointer group flex flex-col items-center gap-3"
       >
-        <IndonesianFlag className="w-20 h-20" />
+        <IndonesianFlag className="w-16 h-16" />
         <span className="font-semibold text-lg text-white opacity-80 group-hover:opacity-100 transition-opacity">{t('landingPage.indonesian')}</span>
       </motion.div>
     </div>

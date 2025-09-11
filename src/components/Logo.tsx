@@ -36,7 +36,7 @@ export const Logo: React.FC<LogoProps> = ({ className = 'h-16 w-auto', layout = 
             2Go
           </text>
           <text
-            x="75"
+            x="85"
             y="35"
             className="brand-light-h"
             fill="#374151"
@@ -50,7 +50,7 @@ export const Logo: React.FC<LogoProps> = ({ className = 'h-16 w-auto', layout = 
 
   // New vertical layout for the landing page
   return (
-    <div className={`flex flex-col items-center justify-center ${className}`}>
+    <div className={`flex flex-col items-center justify-center pb-4 ${className}`}>
       <svg
         viewBox="0 0 220 120"
         className="w-48 h-auto drop-shadow-lg"

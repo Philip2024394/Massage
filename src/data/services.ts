@@ -42,3 +42,28 @@ export const specialtyKeys = [
   'services.specialty.babyCare',
   'services.specialty.maternalCare'
 ];
+
+export const additionalPlaceServices = [
+  'services.place.salon',
+  'services.place.nails',
+  'services.place.bodyScrubs',
+  'services.place.bodyWraps',
+  'services.place.facials',
+  'services.place.aromatherapy',
+  'services.place.reflexology',
+  'services.place.saunaSteam',
+  'services.place.hotTubsJacuzzis',
+];
+
+export const languageKeys = [
+  'languages.english',
+  'languages.indonesian',
+  'languages.mandarin',
+  'languages.japanese',
+  'languages.korean',
+  'languages.german',
+  'languages.french',
+  'languages.dutch',
+];
+
+export const placeServiceKeys = [...massageTypeKeys, ...additionalPlaceServices];

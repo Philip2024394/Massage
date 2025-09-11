@@ -1,40 +1,69 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Star, ArrowLeft, MessageSquarePlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { TherapistProfile, Review } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
-import { SubmitReviewModal } from '../components/SubmitReviewModal';
-import { ReviewFormData } from '../App';
+import { SubmitReviewModal, ReviewFormData } from '../components/SubmitReviewModal';
+import { supabase } from '../supabaseClient';
+import { mapSupabaseTherapistToProfile, mapSupabaseReviewToAppReview } from '../data/data-mappers';
 
-interface ReviewsPageProps {
-  therapists: TherapistProfile[];
-  reviews: Review[];
-  onReviewSubmit: (therapistId: string, formData: ReviewFormData) => void;
-}
-
-export const ReviewsPage: React.FC<ReviewsPageProps> = ({ therapists, reviews, onReviewSubmit }) => {
+export const ReviewsPage: React.FC = () => {
   const { therapistId } = useParams<{ therapistId: string }>();
   const { t } = useTranslation();
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [therapist, setTherapist] = useState<TherapistProfile | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const therapist = useMemo(() => therapists.find(t => t.id === therapistId), [therapists, therapistId]);
-  const approvedReviews = useMemo(() => reviews.filter(r => r.therapistId === therapistId && r.status === 'approved'), [reviews, therapistId]);
+  const fetchDetails = useCallback(async () => {
+    if (!therapistId) return;
+    setLoading(true);
+    try {
+      const [therapistRes, reviewsRes] = await Promise.all([
+        supabase.from('therapists').select('*').eq('id', therapistId).single(),
+        supabase.from('reviews').select('*').eq('target_id', therapistId).eq('status', 'approved')
+      ]);
+      if (therapistRes.error) throw therapistRes.error;
+      if (reviewsRes.error) throw reviewsRes.error;
 
+      setTherapist(mapSupabaseTherapistToProfile(therapistRes.data));
+      setReviews(reviewsRes.data.map(mapSupabaseReviewToAppReview));
+    } catch (error) {
+      console.error("Error fetching therapist details:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [therapistId]);
+
+  useEffect(() => {
+    fetchDetails();
+  }, [fetchDetails]);
+  
   const averageRating = useMemo(() => {
-    if (approvedReviews.length === 0) return 0;
-    const total = approvedReviews.reduce((sum, review) => sum + review.rating, 0);
-    return (total / approvedReviews.length).toFixed(1);
-  }, [approvedReviews]);
+    if (reviews.length === 0) return 0;
+    const total = reviews.reduce((sum, review) => sum + review.rating, 0);
+    return (total / reviews.length).toFixed(1);
+  }, [reviews]);
 
+  const handleFormSubmit = async (formData: ReviewFormData) => {
+    if (!therapist) return;
+    await supabase.from('reviews').insert({
+      target_id: therapist.id,
+      target_type: 'therapist',
+      customer_name: formData.customerName,
+      customer_whatsapp: `+62${formData.customerWhatsApp}`,
+      rating: formData.rating,
+      comment: formData.comment,
+      status: 'pending',
+    });
+    setShowReviewModal(false);
+  };
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!therapist) {
     return <div className="p-8 text-center">{t('reviewsPage.therapistNotFound')}</div>;
   }
-  
-  const handleFormSubmit = (formData: ReviewFormData) => {
-    onReviewSubmit(therapist.id, formData);
-    setShowReviewModal(false);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -56,13 +85,13 @@ export const ReviewsPage: React.FC<ReviewsPageProps> = ({ therapists, reviews, o
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8 mb-8 flex items-center space-x-6">
-            <img src={therapist.profileImageUrl || 'https://via.placeholder.com/150'} alt={therapist.name} className="w-24 h-24 rounded-full object-cover shadow-md" />
+            <img loading="lazy" src={therapist.profileImageUrl || 'https://via.placeholder.com/150'} alt={therapist.name} className="w-24 h-24 rounded-full object-cover shadow-md" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">{therapist.name}</h1>
               <div className="flex items-center space-x-2 mt-2">
                 <Star className="h-6 w-6 text-yellow-500 fill-current" />
                 <span className="text-2xl font-bold text-gray-800">{averageRating}</span>
-                <span className="text-gray-600 mt-1">{t('therapistCard.reviews', { reviewCount: approvedReviews.length })}</span>
+                <span className="text-gray-600 mt-1">{t('therapistCard.reviews', { reviewCount: reviews.length })}</span>
               </div>
             </div>
           </div>
@@ -70,8 +99,8 @@ export const ReviewsPage: React.FC<ReviewsPageProps> = ({ therapists, reviews, o
           <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('reviewsPage.customerReviews')}</h2>
           
           <div className="space-y-6">
-            {approvedReviews.length > 0 ? (
-              approvedReviews.map((review, index) => (
+            {reviews.length > 0 ? (
+              reviews.map((review, index) => (
                 <motion.div
                   key={review.id}
                   initial={{ opacity: 0, x: -20 }}

@@ -9,6 +9,78 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      places: {
+        Row: {
+          account_number: string
+          address: string | null
+          city: string | null
+          created_at: string
+          gallery_image_urls: string[] | null
+          id: string
+          languages: string[] | null
+          lat: number | null
+          lng: number | null
+          login_code: string
+          name: string | null
+          opening_hours: Json | null
+          phone: string | null
+          pricing_session_120: number | null
+          pricing_session_60: number | null
+          pricing_session_90: number | null
+          profile_image_url: string | null
+          rating: number
+          review_count: number
+          services: string[] | null
+          status: Database["public"]["Enums"]["place_status"]
+        }
+        Insert: {
+          account_number: string
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          gallery_image_urls?: string[] | null
+          id?: string
+          languages?: string[] | null
+          lat?: number | null
+          lng?: number | null
+          login_code: string
+          name?: string | null
+          opening_hours?: Json | null
+          phone?: string | null
+          pricing_session_120?: number | null
+          pricing_session_60?: number | null
+          pricing_session_90?: number | null
+          profile_image_url?: string | null
+          rating?: number
+          review_count?: number
+          services?: string[] | null
+          status?: Database["public"]["Enums"]["place_status"]
+        }
+        Update: {
+          account_number?: string
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          gallery_image_urls?: string[] | null
+          id?: string
+          languages?: string[] | null
+          lat?: number | null
+          lng?: number | null
+          login_code?: string
+          name?: string | null
+          opening_hours?: Json | null
+          phone?: string | null
+          pricing_session_120?: number | null
+          pricing_session_60?: number | null
+          pricing_session_90?: number | null
+          profile_image_url?: string | null
+          rating?: number
+          review_count?: number
+          services?: string[] | null
+          status?: Database["public"]["Enums"]["place_status"]
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string
@@ -17,8 +89,9 @@ export type Database = {
           customer_whatsapp: string
           id: string
           rating: number
-          status: "pending" | "approved" | "rejected"
-          therapist_id: string
+          status: Database["public"]["Enums"]["review_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["user_account_type"]
         }
         Insert: {
           comment: string
@@ -27,8 +100,9 @@ export type Database = {
           customer_whatsapp: string
           id?: string
           rating: number
-          status?: "pending" | "approved" | "rejected"
-          therapist_id: string
+          status?: Database["public"]["Enums"]["review_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["user_account_type"]
         }
         Update: {
           comment?: string
@@ -37,31 +111,27 @@ export type Database = {
           customer_whatsapp?: string
           id?: string
           rating?: number
-          status?: "pending" | "approved" | "rejected"
-          therapist_id?: string
+          status?: Database["public"]["Enums"]["review_status"]
+          target_id?: string
+          target_type?: Database["public"]["Enums"]["user_account_type"]
         }
-        Relationships: [
-          {
-            foreignKeyName: "reviews_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: false
-            referencedRelation: "therapists"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       therapists: {
         Row: {
+          account_number: string
+          address: string | null
           bio: string | null
           certifications: string[] | null
           city: string | null
-          email: string | null
+          created_at: string
           experience: number | null
           id: string
           is_online: boolean
           languages: string[] | null
           lat: number | null
           lng: number | null
+          login_code: string
           massage_types: string[] | null
           name: string | null
           phone: string | null
@@ -72,44 +142,22 @@ export type Database = {
           rating: number
           review_count: number
           specialties: string[] | null
-          status: "pending" | "active" | "blocked"
-          therapist_number: string | null
+          status: Database["public"]["Enums"]["therapist_status"]
         }
         Insert: {
+          account_number: string
+          address?: string | null
           bio?: string | null
           certifications?: string[] | null
           city?: string | null
-          email?: string | null
-          experience?: number | null
-          id: string
-          is_online?: boolean
-          languages?: string[] | null
-          lat?: number | null
-          lng?: number | null
-          massage_types?: string[] | null
-          name?: string | null
-          phone?: string | null
-          pricing_session_120?: number | null
-          pricing_session_60?: number | null
-          pricing_session_90?: number | null
-          profile_image_url?: string | null
-          rating?: number
-          review_count?: number
-          specialties?: string[] | null
-          status?: "pending" | "active" | "blocked"
-          therapist_number?: string | null
-        }
-        Update: {
-          bio?: string | null
-          certifications?: string[] | null
-          city?: string | null
-          email?: string | null
+          created_at?: string
           experience?: number | null
           id?: string
           is_online?: boolean
           languages?: string[] | null
           lat?: number | null
           lng?: number | null
+          login_code: string
           massage_types?: string[] | null
           name?: string | null
           phone?: string | null
@@ -120,32 +168,48 @@ export type Database = {
           rating?: number
           review_count?: number
           specialties?: string[] | null
-          status?: "pending" | "active" | "blocked"
-          therapist_number?: string | null
+          status?: Database["public"]["Enums"]["therapist_status"]
         }
-        Relationships: [
-          {
-            foreignKeyName: "therapists_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Update: {
+          account_number?: string
+          address?: string | null
+          bio?: string | null
+          certifications?: string[] | null
+          city?: string | null
+          created_at?: string
+          experience?: number | null
+          id?: string
+          is_online?: boolean
+          languages?: string[] | null
+          lat?: number | null
+          lng?: number | null
+          login_code?: string
+          massage_types?: string[] | null
+          name?: string | null
+          phone?: string | null
+          pricing_session_120?: number | null
+          pricing_session_60?: number | null
+          pricing_session_90?: number | null
+          profile_image_url?: string | null
+          rating?: number
+          review_count?: number
+          specialties?: string[] | null
+          status?: Database["public"]["Enums"]["therapist_status"]
+        }
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      handle_new_user: {
-        Args: Record<PropertyKey, never>
-        Returns: Record<PropertyKey, never>
-      }
+      [_ in never]: never
     }
     Enums: {
+      place_status: "pending" | "active" | "blocked"
       review_status: "pending" | "approved" | "rejected"
       therapist_status: "pending" | "active" | "blocked"
+      user_account_type: "therapist" | "place"
     }
     CompositeTypes: {
       [_ in never]: never

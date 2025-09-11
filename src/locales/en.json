@@ -8,17 +8,20 @@
     "brand": "2Go Massage",
     "therapistDashboard": "Dashboard",
     "adminPanel": "Admin Panel",
-    "therapistLogin": "Therapist Login",
+    "therapistLogin": "Account Login",
     "logout": "Logout"
   },
   "filterBar": {
     "onlineCount": "{{onlineCount}} of {{totalCount}} therapists online",
+    "placesOpenCount": "{{openCount}} of {{totalCount}} places open",
     "massageType": "Massage Type",
     "typesSelected": "{{count}} types selected",
     "rating": "Rating",
     "clearSelection": "Clear selection",
     "selectMassageTypes": "Select Massage Types",
-    "closeDropdown": "Done"
+    "closeDropdown": "Done",
+    "homeService": "Home Service",
+    "massagePlaces": "Massage Places"
   },
   "therapistCard": {
     "online": "Online",
@@ -35,12 +38,24 @@
     "session_60": "60 min",
     "session_90": "90 min",
     "session_120": "120 min",
-    "contact": "Contact via WhatsApp",
+    "contact": "Contact",
     "viewReviews": "View Reviews"
+  },
+  "placeCard": {
+    "open": "Open",
+    "closed": "Closed",
+    "kmAway": "{{distance}} km away",
+    "reviews": "({{reviewCount}})",
+    "services": "Services",
+    "more": "+{{count}} more",
+    "contact": "Contact",
+    "viewDetails": "View Details",
+    "openToday": "Open: {{open}} - {{close}}",
+    "closedToday": "Closed Today"
   },
   "swipeable": {
     "counter": "{{currentIndex}} of {{totalCount}}",
-    "noTherapists": "No therapists found",
+    "noTherapists": "No results found",
     "adjustFilters": "Try adjusting your filters or location",
     "animatedHint": "Swipe to discover!",
     "browseHint": "Or use arrows to browse",
@@ -48,7 +63,7 @@
   },
   "locationModal": {
     "title": "Set Your Location",
-    "description": "We need your location to find massage therapists near you.",
+    "description": "We need your location to find massage services near you.",
     "error": "Unable to get your location. Please try again.",
     "gettingLocation": "Getting Location...",
     "useCurrentLocation": "Use Current Location",
@@ -56,51 +71,6 @@
       "permissionDenied": "Location access denied. Please enable location permissions in your browser settings.",
       "positionUnavailable": "Your location could not be determined. Please check your network connection.",
       "timeout": "Could not get your location in time. Please try again."
-    }
-  },
-  "authModal": {
-    "therapistLogin": "Therapist Login",
-    "therapistRegister": "Therapist Registration",
-    "accessTitle": "Therapist Access",
-    "emailLabel": "Email",
-    "emailPlaceholder": "Enter your email",
-    "passwordLabel": "Password",
-    "passwordPlaceholder": "Enter your password",
-    "loginButton": "Login as Therapist",
-    "forgotPassword": "Forgot Password?",
-    "resetPasswordTitle": "Reset Password",
-    "sendResetLink": "Send Reset Link",
-    "resetLinkSent": "Password reset link sent! Please check your email.",
-    "backToLogin": "Back to Login",
-    "needToRegister": "Need to register? Create account",
-    "alreadyHaveAccount": "Already have an account? Login",
-    "fullNameLabel": "Full Name",
-    "fullNamePlaceholder": "Enter your full name",
-    "phoneLabel": "WhatsApp Number",
-    "phonePlaceholder": "81234567890",
-    "whatsappInfo": "Your number must be linked to an active WhatsApp account.",
-    "verifyOnWhatsApp": "Verify on WhatsApp",
-    "whatsappConfirmation": "I confirm my WhatsApp number is correct and active.",
-    "therapistNumberLabel": "Therapist Number",
-    "therapistNumberPlaceholder": "Enter your official therapist number",
-    "experienceLabel": "Years of Experience",
-    "experiencePlaceholder": "Years of experience",
-    "confirmPasswordLabel": "Confirm Password",
-    "confirmPasswordPlaceholder": "Confirm your password",
-    "registerButton": "Register as Therapist",
-    "errors": {
-      "emailRequired": "Email is required",
-      "passwordRequired": "Password is required",
-      "nameRequired": "Full name is required",
-      "phoneRequired": "WhatsApp number is required",
-      "phoneFormat": "Phone number should be 9-13 digits.",
-      "whatsappNotVerified": "Please verify your WhatsApp number before registering.",
-      "therapistNumberRequired": "Therapist number is required",
-      "experienceRequired": "Experience is required",
-      "experienceMin": "Experience cannot be negative",
-      "confirmRequired": "Please confirm your password",
-      "passwordMismatch": "Passwords do not match",
-      "invalidCredentials": "Invalid WhatsApp number or password."
     }
   },
   "therapistDashboard": {
@@ -114,7 +84,8 @@
     "uploadPhotoTitle": "Upload new photo",
     "fullName": "Full Name",
     "experience": "Years of Experience",
-    "phone": "Phone Number",
+    "phone": "WhatsApp Number",
+    "testWhatsApp": "Test",
     "city": "City",
     "bio": "Professional Bio",
     "bioPlaceholder": "Tell clients about your experience and approach to massage therapy...",
@@ -125,13 +96,42 @@
     "services": "Massage Services Offered",
     "specialties": "Specialties",
     "updateProfile": "Update Profile",
-    "updateSuccess": "Profile updated successfully!"
+    "updateSuccess": "Profile updated successfully!",
+    "confirmLocation": "Confirm My Location",
+    "confirmLocationInfo": "Click the button to automatically fill your coordinates based on your current location. This is required for distance calculations."
+  },
+  "placeDashboard": {
+    "status": "Status:",
+    "open": "Open",
+    "closed": "Closed",
+    "businessProfile": "Business Profile",
+    "profileInfo": "Keep your business details up to date.",
+    "profilePhoto": "Business Photo",
+    "updatePhoto": "Update your photo to showcase your place.",
+    "uploadPhotoTitle": "Upload new photo",
+    "businessName": "Business Name",
+    "phone": "Business WhatsApp",
+    "testWhatsApp": "Test",
+    "address": "Address",
+    "city": "City",
+    "locationCoordinates": "Location Coordinates",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "services": "Services Offered",
+    "languages": "Languages Spoken",
+    "updateProfile": "Update Profile",
+    "updateSuccess": "Profile updated successfully!",
+    "confirmLocation": "Confirm My Location",
+    "confirmLocationInfo": "Click the button to automatically fill your coordinates based on your current location. This is required for distance calculations.",
+    "openingHours": "Opening Hours"
   },
   "adminDashboard": {
     "title": "Admin Panel",
     "manageTherapists": "Manage Therapists",
+    "managePlaces": "Manage Places",
     "manageReviews": "Manage Reviews",
     "therapist": "Therapist",
+    "place": "Place",
     "status": "Status",
     "rating": "Rating",
     "actions": "Actions",
@@ -139,6 +139,7 @@
     "blocked": "Blocked",
     "pending": "Pending Approval",
     "approve": "Approve",
+    "reject": "Reject",
     "whatsappNumber": "WhatsApp Number",
     "visibility": "Visibility",
     "reviewDetails": "Review Details",
@@ -150,10 +151,21 @@
   "reviewsPage": {
     "backToBrowse": "Back to Browse",
     "writeReview": "Write a Review",
-    "therapistNotFound": "Therapist not found.",
+    "therapistNotFound": "Profile not found.",
     "customerReviews": "Customer Reviews",
-    "noReviewsYet": "No reviews yet for this therapist.",
+    "noReviewsYet": "No reviews yet.",
     "beTheFirst": "Be the first to share your experience!"
+  },
+  "placeDetailsPage": {
+    "backToBrowse": "Back to Browse",
+    "writeReview": "Write a Review",
+    "placeNotFound": "Place not found.",
+    "customerReviews": "Customer Reviews",
+    "noReviewsYet": "No reviews yet for this place.",
+    "beTheFirst": "Be the first to share your experience!",
+    "services": "Services Offered",
+    "languages": "Languages Spoken",
+    "contact": "Contact"
   },
   "submitReview": {
     "title": "Review: {{name}}",
@@ -166,7 +178,7 @@
     "whatsappLabel": "Your WhatsApp Number",
     "whatsappPlaceholder": "81234567890",
     "commentLabel": "Your Review",
-    "commentPlaceholder": "Share details of your own experience with this therapist.",
+    "commentPlaceholder": "Share details of your own experience.",
     "submitButton": "Submit Review",
     "errors": {
       "ratingRequired": "Please select a rating.",
@@ -177,7 +189,7 @@
   },
   "termsPage": {
     "title": "Terms of Service",
-    "lastUpdated": "Last Updated: October 26, 2025",
+    "lastUpdated": "October 26, 2025",
     "introductionTitle": "1. Introduction",
     "introductionContent": "Welcome to 2Go Massage. These Terms of Service govern your use of our platform that connects users with independent massage therapy professionals. By using our service, you agree to these terms in full.",
     "serviceDescriptionTitle": "2. Platform Role & Service Description",
@@ -202,12 +214,43 @@
     "serviceStandardTitle": "Service Standards & Feedback",
     "serviceStandardContent": "If the massage service is not up to the required standards, you have the right to end the session. We encourage honest ratings with clear explanations of your experience and preferences. Please feel free to communicate with your therapist at any time during your massage to ensure your comfort and satisfaction."
   },
+  "days": {
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
+  },
+  "languages": {
+    "english": "English",
+    "indonesian": "Indonesian",
+    "mandarin": "Mandarin",
+    "japanese": "Japanese",
+    "korean": "Korean",
+    "german": "German",
+    "french": "French",
+    "dutch": "Dutch"
+  },
   "services": {
     "massage": {
       "swedish": "Swedish Massage", "deepTissue": "Deep Tissue", "thai": "Thai Massage", "hotStone": "Hot Stone", "aromatherapy": "Aromatherapy", "sports": "Sports Massage", "prenatal": "Prenatal Massage", "reflexology": "Reflexology", "shiatsu": "Shiatsu", "triggerPoint": "Trigger Point", "indonesianTraditional": "Indonesian Traditional", "balinese": "Balinese Massage", "javanese": "Javanese Massage", "pijatUrut": "Pijat Urut", "kerok": "Kerok Massage", "coinRub": "Coin Rub", "guasha": "Guasha Indonesian", "bekam": "Bekam Massage", "pijatRefleksi": "Pijat Refleksi", "pijatTradisional": "Pijat Tradisional", "totokWajah": "Totok Wajah", "pijatIbuHamil": "Pijat Ibu Hamil", "pijatBayi": "Pijat Bayi", "pijatKesehatan": "Pijat Kesehatan"
     },
+    "place": {
+      "salon": "Salon",
+      "nails": "Nails",
+      "bodyScrubs": "Body Scrubs",
+      "bodyWraps": "Body Wraps",
+      "facials": "Facials",
+      "aromatherapy": "Aromatherapy",
+      "reflexology": "Reflexology",
+      "saunaSteam": "Sauna / Steam Room",
+      "hotTubsJacuzzis": "Hot Tubs / Jacuzzis"
+    },
     "specialty": {
-      "painRelief": "Pain Relief", "stressReduction": "Stress Reduction", "sportsRecovery": "Sports Recovery", "pregnancyCare": "Pregnancy Care", "injuryRehab": "Injury Rehabilitation", "relaxation": "Relaxation", "chronicPain": "Chronic Pain", "flexibility": "Flexibility", "circulation": "Circulation", "wellness": "Wellness", "traditionalHealing": "Traditional Healing", "energyBalance": "Energy Balance", "facial": "Facial Massage", "babyCare": "Baby Care", "maternalCare": "Maternal Care"
+      "painRelief": "Pain Relief", "stressReduction": "Stress Reduction", "sportsRecovery": "Sports Recovery", "pregnancyCare": "Pregnancy Care", "injuryRehab": "Injury Rehabilitation",
+      "relaxation": "Relaxation", "chronicPain": "Chronic Pain", "flexibility": "Flexibility", "circulation": "Circulation", "wellness": "Wellness", "traditionalHealing": "Traditional Healing", "energyBalance": "Energy Balance", "facial": "Facial Massage", "babyCare": "Baby Care", "maternalCare": "Maternal Care"
     }
   }
 }
