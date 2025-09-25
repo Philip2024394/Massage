@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Building, LogOut, Camera, Badge, Home, MessageCircle, Check, MapPin, Loader, Clock, Trash2, Upload, Globe, Key, Copy, Star } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm, useWatch, Controller } from 'react-hook-form';
-import { AuthInfo, MassagePlaceProfile, OpeningHours } from '../types';
+import { MassagePlaceProfile, OpeningHours } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 import { Logo } from './Logo';
 import { CitySelector } from './CitySelector';
@@ -14,8 +14,9 @@ import { supabase } from '../supabaseClient';
 import { mapSupabasePlaceToProfile } from '../data/data-mappers';
 import { getWhatsAppUrl, getCurrentLocation } from '../utils/location';
 import { generateTimeOptions } from '../utils/time';
+import { useAuth } from '../context/AuthContext';
 
-type ProfileForm = Omit<MassagePlaceProfile, 'id' | 'rating' | 'reviewCount' | 'distance' | 'status' | 'location' | 'accountNumber' | 'login_code' | 'pricing' | 'isOpen'> & {
+type ProfileForm = Omit<MassagePlaceProfile, 'id' | 'rating' | 'reviewCount' | 'distance' | 'status' | 'location' | 'accountNumber' | 'login_code' | 'pricing' | 'isOpen' | 'email'> & {
   city: string;
   lat: number;
   lng: number;
@@ -29,13 +30,13 @@ type ProfileForm = Omit<MassagePlaceProfile, 'id' | 'rating' | 'reviewCount' | '
 const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 
 interface PlaceDashboardProps {
-  authInfo: AuthInfo;
-  onLogout: () => void;
   onProfileUpdate: () => void;
 }
 
-export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogout, onProfileUpdate }) => {
-  const { code } = useParams<{ code: string }>();
+export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ onProfileUpdate }) => {
+  const { profile: authProfile, signOut } = useAuth();
+  const placeAuthProfile = authProfile as MassagePlaceProfile;
+
   const profileFileInputRef = useRef<HTMLInputElement>(null);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
@@ -53,23 +54,18 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
   const timeOptions = generateTimeOptions();
 
   const fetchProfile = useCallback(async () => {
-    if (!code) return;
+    if (!placeAuthProfile?.id) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('places').select('*').eq('login_code', code);
+      const { data, error } = await supabase.from('places').select('*').eq('id', placeAuthProfile.id).single();
 
-      if (error) {
+      if (error || !data) {
         console.error('Error fetching place profile:', error);
-        navigate('/setup-profile', { state: { code, type: 'place' }, replace: true });
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        navigate('/setup-profile', { state: { code, type: 'place' }, replace: true });
+        navigate('/login');
         return;
       }
       
-      const profile = mapSupabasePlaceToProfile(data[0]);
+      const profile = mapSupabasePlaceToProfile(data);
       setPlaceProfile(profile);
       reset({
         name: profile.name, phone: profile.phone, address: profile.address, city: profile.city,
@@ -89,11 +85,11 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
       });
     } catch (error) {
       console.error('Unhandled error in fetchProfile (place):', error);
-      navigate('/setup-profile', { state: { code, type: 'place' }, replace: true });
+      navigate('/login');
     } finally {
       setLoading(false);
     }
-  }, [code, reset, navigate]);
+  }, [placeAuthProfile?.id, reset, navigate]);
 
   useEffect(() => {
     fetchProfile();
@@ -124,13 +120,10 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
         
         const { publicUrl } = uploadResult;
 
-        const { error: updateError } = await supabase.functions.invoke('update-profile', {
-          body: {
-            type: 'place',
-            code: placeProfile.login_code,
-            payload: { profile_image_url: publicUrl }
-          }
-        });
+        const { error: updateError } = await supabase
+          .from('places')
+          .update({ profile_image_url: publicUrl })
+          .eq('id', placeProfile.id);
 
         if (updateError) throw updateError;
         await fetchProfile();
@@ -187,9 +180,11 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
 
     if (newUrls.length > 0) {
       const allUrls = [...existingUrls, ...newUrls];
-      const { error: updateError } = await supabase.functions.invoke('update-profile', {
-        body: { type: 'place', code: placeProfile.login_code, payload: { gallery_image_urls: allUrls } }
-      });
+      const { error: updateError } = await supabase
+        .from('places')
+        .update({ gallery_image_urls: allUrls })
+        .eq('id', placeProfile.id);
+        
       if (!updateError) await fetchProfile();
       else console.error("Error updating gallery URLs:", updateError);
     }
@@ -211,9 +206,10 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
 
       const updatedUrls = placeProfile.galleryImageUrls.filter(url => url !== urlToDelete);
       
-      const { error: updateError } = await supabase.functions.invoke('update-profile', {
-        body: { type: 'place', code: placeProfile.login_code, payload: { gallery_image_urls: updatedUrls } }
-      });
+      const { error: updateError } = await supabase
+        .from('places')
+        .update({ gallery_image_urls: updatedUrls })
+        .eq('id', placeProfile.id);
       
       if (!updateError) await fetchProfile();
       else console.error("Error updating gallery after delete:", updateError);
@@ -270,13 +266,15 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
       service_areas: data.serviceAreas,
     };
 
-    const { error } = await supabase.functions.invoke('update-profile', {
-      body: { type: 'place', code: placeProfile.login_code, payload: payload }
-    });
+    const { error } = await supabase
+      .from('places')
+      .update(payload)
+      .eq('id', placeProfile.id);
 
     if (!error) {
       onProfileUpdate();
-      navigate('/home');
+      alert('Profile updated successfully!');
+      fetchProfile();
     } else {
       console.error("Error updating profile:", error);
     }
@@ -303,7 +301,7 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
                 <span>{placeProfile.isOpen ? t('placeDashboard.open') : t('placeDashboard.closed')}</span>
               </div>
               <span className="text-sm font-medium text-gray-700 hidden md:block truncate min-w-0">{placeProfile.name}</span>
-              <button onClick={onLogout} className="flex-shrink-0 p-2 text-gray-700 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors" title={t('header.logout')}>
+              <button onClick={signOut} className="flex-shrink-0 p-2 text-gray-700 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors" title={t('header.logout')}>
                 <LogOut className="h-5 w-5" />
               </button>
             </div>
@@ -343,7 +341,7 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
                 {placeProfile.login_code && (
                   <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium px-3 py-1.5 rounded-lg">
                     <Key className="h-4 w-4" />
-                    <span>Your Code: <strong>{placeProfile.login_code}</strong></span>
+                    <span>Login Code: <strong>{placeProfile.login_code}</strong></span>
                     <button type="button" onClick={copyCodeToClipboard} title="Copy Code" className="ml-2 hover:text-blue-900">
                       <Copy className="h-4 w-4" />
                     </button>

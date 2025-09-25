@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, MapPin, Phone, Home, Loader, ArrowLeft, Clock, Globe } from 'lucide-react';
+import { Star, MapPin, Phone, Home, Loader, ArrowLeft, Clock, Globe, MessageSquarePlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { MassagePlaceProfile } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
@@ -8,6 +8,7 @@ import { supabase } from '../supabaseClient';
 import { mapSupabasePlaceToProfile } from '../data/data-mappers';
 import { getWhatsAppUrl } from '../utils/location';
 import { getTodaysHours } from '../utils/time';
+import { SubmitReviewModal, ReviewFormData } from '../components/SubmitReviewModal';
 
 export const PlaceProfilePage: React.FC = () => {
   const { code } = useParams<{ code: string }>();
@@ -15,6 +16,7 @@ export const PlaceProfilePage: React.FC = () => {
   const [place, setPlace] = useState<MassagePlaceProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [mainImage, setMainImage] = useState<string>('');
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const fetchPlaceData = useCallback(async () => {
     if (!code) return;
@@ -44,6 +46,26 @@ export const PlaceProfilePage: React.FC = () => {
     fetchPlaceData();
   }, [fetchPlaceData]);
 
+  const handleReviewSubmit = async (formData: ReviewFormData) => {
+    if (!place) return;
+    const { error } = await supabase.from('reviews').insert({
+      target_id: place.id,
+      target_type: 'place',
+      customer_name: formData.customerName,
+      customer_whatsapp: `+62${formData.customerWhatsApp}`,
+      rating: formData.rating,
+      comment: formData.comment,
+      status: 'pending',
+    });
+    if (error) {
+      console.error('Error submitting review:', error);
+      alert('Failed to submit review.');
+    } else {
+      alert('Review submitted for approval!');
+    }
+    setShowReviewModal(false);
+  };
+
   const formatPrice = (price: number) => `Rp${(price / 1000).toFixed(0)}K`;
 
   if (loading) {
@@ -55,7 +77,7 @@ export const PlaceProfilePage: React.FC = () => {
       <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
         <h2 className="text-2xl font-bold text-red-600 mb-4">Profile Not Found</h2>
         <p className="text-gray-600 mb-6">The code you entered does not match any place profile.</p>
-        <Link to="/" className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600">
+        <Link to="/login" className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600">
           Back to Sign In
         </Link>
       </div>
@@ -76,9 +98,14 @@ export const PlaceProfilePage: React.FC = () => {
               <ArrowLeft className="h-5 w-5" />
               <span className="font-medium">{t('placeDetailsPage.backToBrowse')}</span>
             </Link>
-             <Link to="/home" className="text-gray-700 hover:text-primary-600 p-2 rounded-full" title="Back to Home">
-              <Home className="h-6 w-6" />
-            </Link>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowReviewModal(true)} className="text-gray-700 hover:text-primary-600 p-2 rounded-full hover:bg-gray-100 transition-colors" title={t('placeDetailsPage.writeReview')}>
+                <MessageSquarePlus className="h-6 w-6" />
+              </button>
+              <Link to="/home" className="text-gray-700 hover:text-primary-600 p-2 rounded-full hover:bg-gray-100 transition-colors" title="Back to Home">
+                <Home className="h-6 w-6" />
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -90,28 +117,28 @@ export const PlaceProfilePage: React.FC = () => {
         >
           <div className="relative mb-4">
             <img src={mainImage || 'https://via.placeholder.com/800x500'} alt={place.name} className="w-full h-64 sm:h-80 object-cover rounded-lg shadow-md transition-all duration-300" />
-            <div className="absolute top-4 right-4 flex items-center space-x-2 bg-black/50 text-white px-3 py-1.5 rounded-full">
-              <Star className="h-5 w-5 text-yellow-400 fill-current" />
-              <span className="font-bold text-lg">{place.rating.toFixed(1)}</span>
-              <span className="text-sm opacity-80">({place.reviewCount})</span>
+            <div className="absolute top-3 right-3 flex items-center space-x-1.5 bg-black/50 text-white px-2.5 py-1 rounded-full text-sm">
+              <Star className="h-4 w-4 text-yellow-400 fill-current" />
+              <span className="font-semibold">{place.rating.toFixed(1)}</span>
+              <span className="text-xs opacity-80">({place.reviewCount})</span>
             </div>
           </div>
           
           {uniqueImages.length > 1 && (
-            <div className="grid grid-cols-5 gap-2 mb-6">
-              {uniqueImages.slice(0, 5).map((url, index) => (
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              {uniqueImages.slice(0, 3).map((url, index) => (
                 <img 
                   key={index} 
                   src={url} 
                   alt={`Gallery thumbnail ${index + 1}`} 
                   onClick={() => setMainImage(url)} 
-                  className={`w-full h-16 sm:h-20 object-cover rounded-md cursor-pointer border-2 transition-all ${mainImage === url ? 'border-primary-500 scale-105' : 'border-transparent hover:border-gray-300'}`} 
+                  className={`w-full h-24 sm:h-28 object-cover rounded-md cursor-pointer border-2 transition-all ${mainImage === url ? 'border-primary-500 scale-105' : 'border-transparent hover:border-gray-300'}`} 
                 />
               ))}
             </div>
           )}
           
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{place.name}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{place.name}</h1>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-6">
               <div className="flex-grow">
@@ -170,6 +197,12 @@ export const PlaceProfilePage: React.FC = () => {
             </div>
         </motion.div>
       </main>
+      <SubmitReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        onSubmit={handleReviewSubmit}
+        therapistName={place.name}
+      />
     </div>
   );
 };

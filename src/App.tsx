@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { LandingPage } from './pages/LandingPage';
 import { HomePage } from './pages/HomePage';
@@ -7,22 +7,22 @@ import { TermsPage } from './pages/TermsPage';
 import { PackageDetailsPage } from './pages/PackageDetailsPage';
 import { LocationModal } from './components/LocationModal';
 import { LoadingScreen } from './components/LoadingScreen';
-import { AdminDashboard } from './components/AdminDashboard';
 import { TherapistProfilePage } from './pages/TherapistProfilePage';
 import { PlaceProfilePage } from './pages/PlaceProfilePage';
-import { TherapistDashboard } from './components/TherapistDashboard';
-import { PlaceDashboard } from './components/PlaceDashboard';
 import { ProfileSetupPage } from './pages/ProfileSetupPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { PaymentPage } from './pages/PaymentPage';
 import { StripeCheckoutPage } from './pages/StripeCheckoutPage';
 import { ActivationSuccessPage } from './pages/ActivationSuccessPage';
 import { AgentSignUpPage } from './pages/AgentSignUpPage';
 import { UserLocation, FilterOptions, TherapistProfile, MassagePlaceProfile } from './types';
-import { calculateDistance, getWhatsAppUrl } from './utils/location';
+import { calculateDistance } from './utils/location';
 import { supabase } from './supabaseClient';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from './context/AuthContext';
 import { mapSupabaseTherapistToProfile, mapSupabasePlaceToProfile } from './data/data-mappers';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   const newArray = [...array];
@@ -33,8 +33,8 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return newArray;
 };
 
-function AppContent() {
-  const { authInfo, loading: authLoading, login, logout } = useAuth();
+function App() {
+  const { loading: authLoading } = useAuth();
   const [isAppReady, setIsAppReady] = useState(false);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -109,7 +109,7 @@ function AppContent() {
       if (filters.onlineOnly && !place.isOpen) return false;
       if (filters.massageTypes.length > 0 && !filters.massageTypes.some(type => place.services?.includes(type))) return false;
       if (place.distance && place.distance > filters.maxDistance) return false;
-      if (place.rating < filters.minRating) return false;
+      if (place.rating < place.rating) return false;
       return true;
   }), [placesWithDistance, filters]);
 
@@ -123,22 +123,20 @@ function AppContent() {
         <>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
             <Route path="/home" element={
               <HomePage
-                authInfo={authInfo} onLogin={login} onLogout={logout}
                 filteredTherapists={filteredTherapists} filteredPlaces={filteredPlaces}
                 filters={filters} onlineCount={onlineCount} totalCount={therapists.length}
                 openPlacesCount={openPlacesCount} totalPlacesCount={places.length}
-                onFiltersChange={setFilters} onWhatsAppClick={(p, n) => window.open(getWhatsAppUrl(p, `Hi ${n}`), '_blank')}
+                onFiltersChange={setFilters}
               />
             } />
             <Route path="/therapist-profiles/:code" element={<TherapistProfilePage />} />
             <Route path="/place-profiles/:code" element={<PlaceProfilePage />} />
-            <Route path="/therapist-dashboard/:code" element={authInfo?.type === 'therapist' ? <TherapistDashboard authInfo={authInfo} onLogout={logout} onProfileUpdate={fetchAllData} /> : <Navigate to="/home" />} />
-            <Route path="/place-dashboard/:code" element={authInfo?.type === 'place' ? <PlaceDashboard authInfo={authInfo} onLogout={logout} onProfileUpdate={fetchAllData} /> : <Navigate to="/home" />} />
-            <Route path="/admin-dashboard" element={authInfo?.type === 'admin' ? <AdminDashboard onLogout={logout} /> : <Navigate to="/home" />} />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/setup-profile" element={<ProfileSetupPage />} />
-            <Route path="/register" element={<RegisterPage />} />
             <Route path="/pay" element={<PaymentPage />} />
             <Route path="/stripe-checkout" element={<StripeCheckoutPage />} />
             <Route path="/activation-success" element={<ActivationSuccessPage />} />
@@ -154,5 +152,4 @@ function AppContent() {
   );
 }
 
-function App() { return (<Router><AppContent /></Router>); }
 export default App;

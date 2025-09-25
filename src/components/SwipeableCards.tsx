@@ -36,7 +36,7 @@ export const SwipeableCards: React.FC<SwipeableCardsProps> = ({
 }) => {
   const [[page, direction], setPage] = useState([0, 0]);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
-  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const idleTimerRef = useRef<number | null>(null);
   const { t } = useTranslation();
 
   const currentIndex = page % therapists.length;
@@ -44,7 +44,7 @@ export const SwipeableCards: React.FC<SwipeableCardsProps> = ({
   const handleInteraction = useCallback(() => {
     setShowSwipeHint(false);
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    idleTimerRef.current = setTimeout(() => setShowSwipeHint(true), 60000);
+    idleTimerRef.current = window.setTimeout(() => setShowSwipeHint(true), 60000);
   }, []);
 
   useEffect(() => {

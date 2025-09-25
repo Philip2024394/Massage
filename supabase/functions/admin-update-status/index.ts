@@ -8,7 +8,13 @@ serve(async (req) => {
   }
 
   try {
-    const { entityId, entityType, status } = await req.json()
+    const { entityId, entityType, status, adminCode } = await req.json()
+
+    // Auth check
+    const ADMIN_CODE_SECRET = Deno.env.get('ADMIN_CODE');
+    if (!ADMIN_CODE_SECRET || adminCode !== ADMIN_CODE_SECRET) {
+      throw new Error('Unauthorized: Invalid admin credentials.')
+    }
 
     if (!entityId || !entityType || !status) {
       throw new Error('Missing required parameters: entityId, entityType, or status.')
@@ -43,7 +49,7 @@ serve(async (req) => {
     console.error('Error in admin-update-status function:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
+      status: error.message.includes('Unauthorized') ? 401 : 400,
     })
   }
 })

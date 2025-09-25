@@ -2,15 +2,13 @@ import React from 'react';
 import { Header } from '../components/Header';
 import { FilterBar } from '../components/FilterBar';
 import { SwipeableCards } from '../components/SwipeableCards';
-import { FilterOptions, AuthInfo, TherapistProfile, MassagePlaceProfile } from '../types';
+import { FilterOptions, TherapistProfile, MassagePlaceProfile } from '../types';
 import { PlaceCard } from '../components/PlaceCard';
 import { useTranslation } from '../hooks/useTranslation';
 import { Footer } from '../components/Footer';
+import { getWhatsAppUrl } from '../utils/location';
 
 interface HomePageProps {
-  authInfo: AuthInfo | null;
-  onLogin: (email: string, code: string) => Promise<string | void>;
-  onLogout: () => void;
   filteredTherapists: TherapistProfile[];
   filteredPlaces: MassagePlaceProfile[];
   filters: FilterOptions;
@@ -19,13 +17,9 @@ interface HomePageProps {
   openPlacesCount: number;
   totalPlacesCount: number;
   onFiltersChange: (filters: FilterOptions) => void;
-  onWhatsAppClick: (phone: string, name: string) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
-  authInfo,
-  onLogin,
-  onLogout,
   filteredTherapists,
   filteredPlaces,
   filters,
@@ -34,12 +28,16 @@ export const HomePage: React.FC<HomePageProps> = ({
   openPlacesCount,
   totalPlacesCount,
   onFiltersChange,
-  onWhatsAppClick,
 }) => {
   const { t } = useTranslation();
+
+  const handleWhatsAppClick = (phone: string, name: string) => {
+    window.open(getWhatsAppUrl(phone, `Hi ${name}`), '_blank');
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header authInfo={authInfo} onLogin={onLogin} onLogout={onLogout} />
+      <Header />
       
       <FilterBar
         filters={filters}
@@ -55,7 +53,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           <div className="w-full max-w-md mx-auto">
             <SwipeableCards
               therapists={filteredTherapists}
-              onWhatsAppClick={onWhatsAppClick}
+              onWhatsAppClick={handleWhatsAppClick}
             />
           </div>
         ) : (
@@ -64,7 +62,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <PlaceCard 
                 key={place.id}
                 place={place}
-                onWhatsAppClick={onWhatsAppClick}
+                onWhatsAppClick={handleWhatsAppClick}
               />
             ))}
              {filteredPlaces.length === 0 && (

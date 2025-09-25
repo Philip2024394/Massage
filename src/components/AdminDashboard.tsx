@@ -2,13 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { LogOut, Users, Check, Building, Home, Key, Gift, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { TherapistProfile, MassagePlaceProfile, Review } from '../types';
+import { TherapistProfile, MassagePlaceProfile, Review, AuthInfo } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 import { Logo } from './Logo';
 import { AdminActivationModal } from './AdminActivationModal';
 import { SpecialCodesList } from './SpecialCodesList';
 import { supabase } from '../supabaseClient';
 import { mapSupabaseTherapistToProfile, mapSupabasePlaceToProfile, mapSupabaseReviewToAppReview } from '../data/data-mappers';
+import { useAuth } from '../context/AuthContext';
 
 const ToggleSwitch: React.FC<{ isOn: boolean; onToggle: (isOn: boolean) => void; }> = ({ isOn, onToggle }) => (
   <button onClick={() => onToggle(!isOn)} className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isOn ? 'bg-primary-600' : 'bg-gray-300'}`}>
@@ -22,6 +23,7 @@ interface AdminDashboardProps {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const { t } = useTranslation();
+  const { profile: authProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<'therapists' | 'places' | 'reviews' | 'codes'>('therapists');
   const [therapists, setTherapists] = useState<TherapistProfile[]>([]);
   const [places, setPlaces] = useState<MassagePlaceProfile[]>([]);
@@ -57,9 +59,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   }, [fetchData]);
 
   const handleUpdateStatus = async (id: string, newStatus: 'active' | 'blocked', type: 'therapist' | 'place') => {
+    if (authProfile?.type !== 'admin') {
+      alert('Unauthorized action.');
+      return;
+    }
+    
     const { error } = await supabase.functions.invoke('admin-update-status', {
-      body: { entityId: id, entityType: type, status: newStatus }
+      body: { 
+        entityId: id, 
+        entityType: type, 
+        status: newStatus,
+        adminCode: (authProfile as AuthInfo).code
+      }
     });
+
     if (error) {
       console.error(`Status update failed:`, error);
       alert(`Failed to update status: ${error.message}`);
