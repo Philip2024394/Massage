@@ -1,11 +1,14 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { User, LogOut, Camera, Badge, Home, MessageCircle, Check, MapPin, Loader, Globe } from 'lucide-react';
+import { User, LogOut, Camera, Badge, Home, MessageCircle, Check, MapPin, Loader, Globe, Key, Copy, Star } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { AuthInfo, TherapistProfile } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 import { Logo } from './Logo';
+import { CitySelector } from './CitySelector';
+import { TagInput } from './TagInput';
+import { ActivationCard } from './ActivationCard';
 import { massageTypeKeys, specialtyKeys, languageKeys } from '../data/services';
 import { supabase } from '../supabaseClient';
 import { mapSupabaseTherapistToProfile } from '../data/data-mappers';
@@ -19,6 +22,7 @@ type ProfileForm = Omit<TherapistProfile, 'id' | 'rating' | 'reviewCount' | 'dis
   pricing60: number;
   pricing90: number;
   pricing120: number;
+  serviceAreas: string[];
 };
 
 interface TherapistDashboardProps {
@@ -34,6 +38,7 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
   const navigate = useNavigate();
   const [therapistProfile, setTherapistProfile] = useState<TherapistProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
   const [whatsAppTested, setWhatsAppTested] = useState(false);
   const [isConfirmingLocation, setIsConfirmingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -45,10 +50,20 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
     if (!code) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('therapists').select('*').eq('login_code', code).single();
-      if (error) throw error;
+      const { data, error } = await supabase.from('therapists').select('*').eq('login_code', code);
+
+      if (error) {
+        console.error('Error fetching therapist profile:', error);
+        navigate('/setup-profile', { state: { code, type: 'therapist' }, replace: true });
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        navigate('/setup-profile', { state: { code, type: 'therapist' }, replace: true });
+        return;
+      }
       
-      const profile = mapSupabaseTherapistToProfile(data);
+      const profile = mapSupabaseTherapistToProfile(data[0]);
       setTherapistProfile(profile);
       reset({
         name: profile.name, bio: profile.bio, experience: profile.experience, phone: profile.phone,
@@ -58,13 +73,15 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
         pricing120: profile.pricing.session120, massageTypes: profile.massageTypes, specialties: profile.specialties,
         isOnline: profile.isOnline, profileImageUrl: profile.profileImageUrl, languages: profile.languages,
         certifications: profile.certifications,
+        serviceAreas: profile.serviceAreas || [],
       });
     } catch (error) {
-      console.error('Error fetching therapist profile:', error);
+      console.error('Unhandled error in fetchProfile:', error);
+      navigate('/setup-profile', { state: { code, type: 'therapist' }, replace: true });
     } finally {
       setLoading(false);
     }
-  }, [code, reset]);
+  }, [code, reset, navigate]);
 
   useEffect(() => {
     fetchProfile();
@@ -72,22 +89,66 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
 
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0 || !therapistProfile) return;
+    
     const file = event.target.files[0];
-    const fileName = `${therapistProfile.id}/${Date.now()}`;
-    const { data, error } = await supabase.storage.from('profile-images').upload(fileName, file);
-    if (error) { console.error('Error uploading image:', error); return; }
-    const { data: { publicUrl } } = supabase.storage.from('profile-images').getPublicUrl(data.path);
-    const { error: updateError } = await supabase.from('therapists').update({ profile_image_url: publicUrl }).eq('id', therapistProfile.id);
-    if (!updateError) fetchProfile();
+    setIsUploading(true);
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = async () => {
+      try {
+        const fileContent = reader.result as string;
+        const { data: uploadResult, error: functionError } = await supabase.functions.invoke('storage-manager', {
+          body: {
+            action: 'upload',
+            fileContent,
+            fileName: file.name,
+            contentType: file.type,
+            entityId: therapistProfile.id,
+            entityType: 'therapist'
+          }
+        });
+
+        if (functionError) throw functionError;
+        
+        const { publicUrl } = uploadResult;
+
+        const { error: updateError } = await supabase.functions.invoke('update-profile', {
+          body: {
+            type: 'therapist',
+            code: therapistProfile.login_code,
+            payload: { profile_image_url: publicUrl }
+          }
+        });
+
+        if (updateError) throw updateError;
+
+        await fetchProfile();
+      } catch (error) {
+        console.error("Error handling image upload:", error);
+      } finally {
+        setIsUploading(false);
+      }
+    };
   };
 
   const handleToggleStatus = async () => {
     if (!therapistProfile) return;
     const newStatus = !therapistProfile.isOnline;
-    const { error } = await supabase.from('therapists').update({ is_online: newStatus }).eq('id', therapistProfile.id);
+    
+    const { error } = await supabase.functions.invoke('update-profile', {
+      body: {
+        type: 'therapist',
+        code: therapistProfile.login_code,
+        payload: { is_online: newStatus }
+      }
+    });
+
     if (!error) {
       setTherapistProfile(prev => prev ? { ...prev, isOnline: newStatus } : null);
       setValue('isOnline', newStatus);
+    } else {
+      console.error("Error updating status:", error);
     }
   };
 
@@ -122,25 +183,55 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
     }
   };
 
+  const copyCodeToClipboard = () => {
+    if (therapistProfile?.login_code) {
+      navigator.clipboard.writeText(therapistProfile.login_code);
+      alert('Login code copied to clipboard!');
+    }
+  };
+
   const onSubmit = async (data: ProfileForm) => {
     if (!therapistProfile) return;
-    const { error } = await supabase.from('therapists').update({
-      name: data.name, bio: data.bio, experience: data.experience, phone: data.phone,
-      address: data.address, city: data.city, lat: data.lat, lng: data.lng,
-      pricing_session_60: data.pricing60, pricing_session_90: data.pricing90,
-      pricing_session_120: data.pricing120, massage_types: data.massageTypes, specialties: data.specialties,
+    
+    const payload = {
+      name: data.name,
+      bio: data.bio,
+      experience: data.experience,
+      phone: data.phone,
+      address: data.address,
+      city: data.city,
+      lat: data.lat,
+      lng: data.lng,
+      pricing_session_60: data.pricing60,
+      pricing_session_90: data.pricing90,
+      pricing_session_120: data.pricing120,
+      massage_types: data.massageTypes,
+      specialties: data.specialties,
       languages: data.languages,
-    }).eq('id', therapistProfile.id);
+      service_areas: data.serviceAreas,
+    };
+
+    const { error } = await supabase.functions.invoke('update-profile', {
+      body: {
+        type: 'therapist',
+        code: therapistProfile.login_code,
+        payload: payload
+      }
+    });
+
     if (!error) {
       await onProfileUpdate();
       navigate('/home');
     } else {
       console.error("Error updating profile:", error);
+      alert(`Profile update failed: ${error.message}`);
     }
   };
   
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Profile...</div>;
-  if (!therapistProfile) return <div className="min-h-screen flex items-center justify-center">Could not load profile.</div>;
+  if (!therapistProfile) return null;
+
+  const isAccountActive = therapistProfile.status === 'active' && new Date(therapistProfile.accountExpiry || 0) > new Date();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -156,7 +247,7 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
               </Link>
               <div className="flex-shrink-0 flex items-center space-x-2">
                 <span className="text-sm font-medium text-gray-700 hidden sm:inline">{t('therapistDashboard.status')}</span>
-                <button onClick={handleToggleStatus} className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${therapistProfile.isOnline ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                <button onClick={handleToggleStatus} disabled={!isAccountActive} className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${therapistProfile.isOnline ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} disabled:opacity-50 disabled:cursor-not-allowed`}>
                   {therapistProfile.isOnline ? t('therapistDashboard.online') : t('therapistDashboard.offline')}
                 </button>
               </div>
@@ -171,33 +262,67 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8">
-            <div className="flex justify-between items-start">
+          {!isAccountActive && (
+            <ActivationCard 
+              entityId={therapistProfile.id}
+              entityType="therapist"
+              loginCode={therapistProfile.login_code}
+              onActivated={fetchProfile}
+            />
+          )}
+          <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8 ${!isAccountActive ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center space-x-3"><User className="h-7 w-7 text-primary-600" /><span>{t('therapistDashboard.profileManagement')}</span></h2>
                 <p className="text-gray-600 mb-8">{t('therapistDashboard.profileInfo')}</p>
               </div>
-              {therapistProfile.accountNumber && (
-                <div className="flex items-center gap-2 bg-gray-100 text-gray-600 text-sm font-medium px-3 py-1.5 rounded-lg">
-                  <Badge className="h-4 w-4" />
-                  <span>{therapistProfile.accountNumber}</span>
-                </div>
-              )}
+              <div className="flex flex-col items-end gap-2">
+                {isAccountActive && (
+                  <div className="flex items-center gap-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-1.5 rounded-lg">
+                    <Star className="h-4 w-4" />
+                    <span>Premium Account (Rp150.000/month)</span>
+                  </div>
+                )}
+                {therapistProfile.accountNumber && (
+                  <div className="flex items-center gap-2 bg-gray-100 text-gray-600 text-sm font-medium px-3 py-1.5 rounded-lg">
+                    <Badge className="h-4 w-4" />
+                    <span>{therapistProfile.accountNumber}</span>
+                  </div>
+                )}
+                {therapistProfile.login_code && (
+                  <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium px-3 py-1.5 rounded-lg">
+                    <Key className="h-4 w-4" />
+                    <span>Your Code: <strong>{therapistProfile.login_code}</strong></span>
+                    <button type="button" onClick={copyCodeToClipboard} title="Copy Code" className="ml-2 hover:text-blue-900">
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 mt-8">
               <div className="flex items-center space-x-6">
                 <div className="relative">
                   <img src={therapistProfile.profileImageUrl || 'https://via.placeholder.com/150'} alt="Profile" className="w-28 h-28 rounded-full object-cover shadow-md" />
                   <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-                  <button type="button" onClick={handleUploadClick} className="absolute bottom-0 right-0 bg-primary-500 text-white p-2 rounded-full hover:bg-primary-600 shadow-sm" title={t('therapistDashboard.uploadPhotoTitle')}><Camera className="h-4 w-4" /></button>
+                  <button type="button" onClick={handleUploadClick} disabled={isUploading} className="absolute bottom-0 right-0 bg-primary-500 text-white p-2 rounded-full hover:bg-primary-600 shadow-sm disabled:bg-gray-400">
+                    {isUploading ? <Loader className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                  </button>
                 </div>
                 <div><h4 className="text-md font-semibold text-gray-900">{t('therapistDashboard.profilePhoto')}</h4><p className="text-sm text-gray-600">{t('therapistDashboard.updatePhoto')}</p></div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.fullName')}</label><input type="text" {...register('name')} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
-                <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.experience')}</label><input type="number" {...register('experience')} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
+                <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.experience')}</label><input type="number" {...register('experience', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('placeDashboard.address')}</label><input type="text" {...register('address')} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
-                <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.city')}</label><input type="text" {...register('city')} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.city')}</label>
+                  <Controller name="city" control={control} render={({ field }) => <CitySelector {...field} />} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Surrounding Service Areas</label>
+                <Controller name="serviceAreas" control={control} render={({ field }) => <TagInput {...field} placeholder="e.g., Kuta, Seminyak..." />} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.phone')}</label>
@@ -214,16 +339,8 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
               </div>
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-md font-semibold text-gray-800 flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-gray-500"/>
-                    {t('placeDashboard.locationCoordinates')}
-                  </h4>
-                  <button 
-                    type="button" 
-                    onClick={handleConfirmLocation} 
-                    disabled={isConfirmingLocation}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-wait"
-                  >
+                  <h4 className="text-md font-semibold text-gray-800 flex items-center gap-2"><MapPin className="h-5 w-5 text-gray-500"/>{t('placeDashboard.locationCoordinates')}</h4>
+                  <button type="button" onClick={handleConfirmLocation} disabled={isConfirmingLocation} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-wait">
                     {isConfirmingLocation ? <Loader className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                     <span>{isConfirmingLocation ? t('locationModal.gettingLocation') : t('therapistDashboard.confirmLocation')}</span>
                   </button>
@@ -231,14 +348,8 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
                 <p className="text-sm text-gray-600 mb-3">{t('therapistDashboard.confirmLocationInfo')}</p>
                 {locationError && <p className="text-red-500 text-xs mb-3">{locationError}</p>}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.latitude')}</label>
-                    <input type="number" step="any" {...register('lat', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readOnly />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.longitude')}</label>
-                    <input type="number" step="any" {...register('lng', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readOnly />
-                  </div>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.latitude')}</label><input type="number" step="any" {...register('lat', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readOnly /></div>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.longitude')}</label><input type="number" step="any" {...register('lng', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readOnly /></div>
                 </div>
               </div>
               <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.bio')}</label><textarea {...register('bio')} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder={t('therapistDashboard.bioPlaceholder')} /></div>

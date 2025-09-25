@@ -1,11 +1,14 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Building, LogOut, Camera, Badge, Home, MessageCircle, Check, MapPin, Loader, Clock, Trash2, Upload, Globe } from 'lucide-react';
+import { Building, LogOut, Camera, Badge, Home, MessageCircle, Check, MapPin, Loader, Clock, Trash2, Upload, Globe, Key, Copy, Star } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { AuthInfo, MassagePlaceProfile, OpeningHours } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 import { Logo } from './Logo';
+import { CitySelector } from './CitySelector';
+import { TagInput } from './TagInput';
+import { ActivationCard } from './ActivationCard';
 import { placeServiceKeys, languageKeys } from '../data/services';
 import { supabase } from '../supabaseClient';
 import { mapSupabasePlaceToProfile } from '../data/data-mappers';
@@ -20,6 +23,7 @@ type ProfileForm = Omit<MassagePlaceProfile, 'id' | 'rating' | 'reviewCount' | '
   pricing90: number;
   pricing120: number;
   openingHours: OpeningHours;
+  serviceAreas: string[];
 };
 
 const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
@@ -32,7 +36,8 @@ interface PlaceDashboardProps {
 
 export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogout, onProfileUpdate }) => {
   const { code } = useParams<{ code: string }>();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const profileFileInputRef = useRef<HTMLInputElement>(null);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [placeProfile, setPlaceProfile] = useState<MassagePlaceProfile | null>(null);
@@ -51,10 +56,20 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
     if (!code) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('places').select('*').eq('login_code', code).single();
-      if (error) throw error;
+      const { data, error } = await supabase.from('places').select('*').eq('login_code', code);
+
+      if (error) {
+        console.error('Error fetching place profile:', error);
+        navigate('/setup-profile', { state: { code, type: 'place' }, replace: true });
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        navigate('/setup-profile', { state: { code, type: 'place' }, replace: true });
+        return;
+      }
       
-      const profile = mapSupabasePlaceToProfile(data);
+      const profile = mapSupabasePlaceToProfile(data[0]);
       setPlaceProfile(profile);
       reset({
         name: profile.name, phone: profile.phone, address: profile.address, city: profile.city,
@@ -66,17 +81,19 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
         pricing90: profile.pricing.session90,
         pricing120: profile.pricing.session120,
         profileImageUrl: profile.profileImageUrl,
+        serviceAreas: profile.serviceAreas || [],
         openingHours: profile.openingHours || {
           monday: { open: null, close: null }, tuesday: { open: null, close: null }, wednesday: { open: null, close: null },
           thursday: { open: null, close: null }, friday: { open: null, close: null }, saturday: { open: null, close: null }, sunday: { open: null, close: null },
         }
       });
     } catch (error) {
-      console.error('Error fetching place profile:', error);
+      console.error('Unhandled error in fetchProfile (place):', error);
+      navigate('/setup-profile', { state: { code, type: 'place' }, replace: true });
     } finally {
       setLoading(false);
     }
-  }, [code, reset]);
+  }, [code, reset, navigate]);
 
   useEffect(() => {
     fetchProfile();
@@ -85,17 +102,48 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
   const handleProfileImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0 || !placeProfile) return;
     const file = event.target.files[0];
-    const fileName = `${placeProfile.id}/${Date.now()}`;
-    const { data, error } = await supabase.storage.from('profile-images').upload(fileName, file);
-    if (error) { console.error('Error uploading image:', error); return; }
-    const { data: { publicUrl } } = supabase.storage.from('profile-images').getPublicUrl(data.path);
-    const { error: updateError } = await supabase.from('places').update({ profile_image_url: publicUrl }).eq('id', placeProfile.id);
-    if (!updateError) fetchProfile();
+    setIsUploading(true);
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = async () => {
+       try {
+        const fileContent = reader.result as string;
+        const { data: uploadResult, error: functionError } = await supabase.functions.invoke('storage-manager', {
+          body: {
+            action: 'upload',
+            fileContent,
+            fileName: file.name,
+            contentType: file.type,
+            entityId: placeProfile.id,
+            entityType: 'place'
+          }
+        });
+
+        if (functionError) throw functionError;
+        
+        const { publicUrl } = uploadResult;
+
+        const { error: updateError } = await supabase.functions.invoke('update-profile', {
+          body: {
+            type: 'place',
+            code: placeProfile.login_code,
+            payload: { profile_image_url: publicUrl }
+          }
+        });
+
+        if (updateError) throw updateError;
+        await fetchProfile();
+      } catch (error) {
+        console.error("Error handling profile image upload:", error);
+      } finally {
+        setIsUploading(false);
+      }
+    };
   };
 
   const handleGalleryImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || !placeProfile) return;
-    setIsUploading(true);
     
     const files = Array.from(event.target.files);
     const existingUrls = placeProfile.galleryImageUrls || [];
@@ -103,50 +151,73 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
 
     if (files.length > availableSlots) {
         alert(`You can only upload ${availableSlots} more images.`);
-        setIsUploading(false);
         return;
     }
-
+    
+    setIsUploading(true);
     const newUrls: string[] = [];
 
     for (const file of files) {
-        const fileName = `${placeProfile.id}/gallery/${Date.now()}-${file.name}`;
-        const { data, error } = await supabase.storage.from('profile-images').upload(fileName, file);
-        if (error) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      await new Promise<void>((resolve) => {
+        reader.onloadend = async () => {
+          try {
+            const fileContent = reader.result as string;
+            const { data: uploadResult, error: functionError } = await supabase.functions.invoke('storage-manager', {
+              body: {
+                action: 'upload',
+                fileContent,
+                fileName: file.name,
+                contentType: file.type,
+                entityId: placeProfile.id,
+                entityType: 'place'
+              }
+            });
+            if (functionError) throw functionError;
+            newUrls.push(uploadResult.publicUrl);
+          } catch (error) {
             console.error('Error uploading gallery image:', error);
-            continue;
-        }
-        const { data: { publicUrl } } = supabase.storage.from('profile-images').getPublicUrl(data.path);
-        newUrls.push(publicUrl);
+          } finally {
+            resolve();
+          }
+        };
+      });
+    }
+
+    if (newUrls.length > 0) {
+      const allUrls = [...existingUrls, ...newUrls];
+      const { error: updateError } = await supabase.functions.invoke('update-profile', {
+        body: { type: 'place', code: placeProfile.login_code, payload: { gallery_image_urls: allUrls } }
+      });
+      if (!updateError) await fetchProfile();
+      else console.error("Error updating gallery URLs:", updateError);
     }
     
-    const allUrls = [...existingUrls, ...newUrls];
-    
-    const { error: updateError } = await supabase.from('places').update({ gallery_image_urls: allUrls }).eq('id', placeProfile.id);
-    
-    if (!updateError) {
-        await fetchProfile();
-    }
     setIsUploading(false);
   };
 
   const handleGalleryImageDelete = async (urlToDelete: string) => {
       if (!placeProfile) return;
       
+      const { error: deleteError } = await supabase.functions.invoke('storage-manager', {
+        body: { action: 'delete', fileUrl: urlToDelete }
+      });
+
+      if (deleteError) {
+        console.error("Error deleting file from storage:", deleteError);
+        return;
+      }
+
       const updatedUrls = placeProfile.galleryImageUrls.filter(url => url !== urlToDelete);
       
-      const { error: updateError } = await supabase.from('places').update({ gallery_image_urls: updatedUrls }).eq('id', placeProfile.id);
+      const { error: updateError } = await supabase.functions.invoke('update-profile', {
+        body: { type: 'place', code: placeProfile.login_code, payload: { gallery_image_urls: updatedUrls } }
+      });
       
-      if (!updateError) {
-          const path = urlToDelete.split('/profile-images/')[1];
-          if (path) {
-              await supabase.storage.from('profile-images').remove([path]);
-          }
-          await fetchProfile();
-      }
+      if (!updateError) await fetchProfile();
+      else console.error("Error updating gallery after delete:", updateError);
   };
-
-  const handleUploadClick = () => fileInputRef.current?.click();
 
   const handleTestWhatsApp = () => {
     if (phoneValue) {
@@ -177,9 +248,17 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
     }
   };
 
+  const copyCodeToClipboard = () => {
+    if (placeProfile?.login_code) {
+      navigator.clipboard.writeText(placeProfile.login_code);
+      alert('Login code copied to clipboard!');
+    }
+  };
+
   const onSubmit = async (data: ProfileForm) => {
     if (!placeProfile) return;
-    const { error } = await supabase.from('places').update({
+    
+    const payload = {
       name: data.name, phone: data.phone, address: data.address, city: data.city,
       lat: data.lat, lng: data.lng,
       services: data.services,
@@ -188,7 +267,13 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
       pricing_session_60: data.pricing60,
       pricing_session_90: data.pricing90,
       pricing_session_120: data.pricing120,
-    }).eq('id', placeProfile.id);
+      service_areas: data.serviceAreas,
+    };
+
+    const { error } = await supabase.functions.invoke('update-profile', {
+      body: { type: 'place', code: placeProfile.login_code, payload: payload }
+    });
+
     if (!error) {
       onProfileUpdate();
       navigate('/home');
@@ -198,7 +283,9 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
   };
   
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Profile...</div>;
-  if (!placeProfile) return <div className="min-h-screen flex items-center justify-center">Could not load profile.</div>;
+  if (!placeProfile) return null;
+
+  const isAccountActive = placeProfile.status === 'active' && new Date(placeProfile.accountExpiry || 0) > new Date();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -226,25 +313,52 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8">
-            <div className="flex justify-between items-start">
+          {!isAccountActive && (
+            <ActivationCard 
+              entityId={placeProfile.id}
+              entityType="place"
+              loginCode={placeProfile.login_code}
+              onActivated={fetchProfile}
+            />
+          )}
+          <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8 ${!isAccountActive ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center space-x-3"><Building className="h-7 w-7 text-primary-600" /><span>{t('placeDashboard.businessProfile')}</span></h2>
                 <p className="text-gray-600 mb-8">{t('placeDashboard.profileInfo')}</p>
               </div>
-               {placeProfile.accountNumber && (
-                <div className="flex items-center gap-2 bg-gray-100 text-gray-600 text-sm font-medium px-3 py-1.5 rounded-lg">
-                  <Badge className="h-4 w-4" />
-                  <span>{placeProfile.accountNumber}</span>
-                </div>
-              )}
+               <div className="flex flex-col items-end gap-2">
+                {isAccountActive && (
+                  <div className="flex items-center gap-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-1.5 rounded-lg">
+                    <Star className="h-4 w-4" />
+                    <span>Premium Account (Rp150.000/month)</span>
+                  </div>
+                )}
+                {placeProfile.accountNumber && (
+                  <div className="flex items-center gap-2 bg-gray-100 text-gray-600 text-sm font-medium px-3 py-1.5 rounded-lg">
+                    <Badge className="h-4 w-4" />
+                    <span>{placeProfile.accountNumber}</span>
+                  </div>
+                )}
+                {placeProfile.login_code && (
+                  <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium px-3 py-1.5 rounded-lg">
+                    <Key className="h-4 w-4" />
+                    <span>Your Code: <strong>{placeProfile.login_code}</strong></span>
+                    <button type="button" onClick={copyCodeToClipboard} title="Copy Code" className="ml-2 hover:text-blue-900">
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 mt-8">
               <div className="flex items-center space-x-6">
                 <div className="relative">
                   <img src={placeProfile.profileImageUrl || 'https://via.placeholder.com/150'} alt="Profile" className="w-28 h-28 rounded-full object-cover shadow-md" />
-                  <input type="file" ref={fileInputRef} onChange={handleProfileImageUpload} accept="image/*" className="hidden" />
-                  <button type="button" onClick={handleUploadClick} className="absolute bottom-0 right-0 bg-primary-500 text-white p-2 rounded-full hover:bg-primary-600 shadow-sm" title={t('placeDashboard.uploadPhotoTitle')}><Camera className="h-4 w-4" /></button>
+                  <input type="file" ref={profileFileInputRef} onChange={handleProfileImageUpload} accept="image/*" className="hidden" />
+                  <button type="button" onClick={() => profileFileInputRef.current?.click()} disabled={isUploading} className="absolute bottom-0 right-0 bg-primary-500 text-white p-2 rounded-full hover:bg-primary-600 shadow-sm disabled:bg-gray-400" title={t('placeDashboard.uploadPhotoTitle')}>
+                    {isUploading ? <Loader className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                  </button>
                 </div>
                 <div><h4 className="text-md font-semibold text-gray-900">{t('placeDashboard.profilePhoto')}</h4><p className="text-sm text-gray-600">{t('placeDashboard.updatePhoto')}</p></div>
               </div>
@@ -255,14 +369,7 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
                   {(placeProfile.galleryImageUrls || []).map(url => (
                     <div key={url} className="relative group">
                       <img src={url} alt="Gallery item" className="w-full h-24 object-cover rounded-lg" />
-                      <button 
-                        type="button" 
-                        onClick={() => handleGalleryImageDelete(url)}
-                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Delete Image"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
+                      <button type="button" onClick={() => handleGalleryImageDelete(url)} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" title="Delete Image"><Trash2 className="h-3 w-3" /></button>
                     </div>
                   ))}
                 </div>
@@ -272,7 +379,7 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
                     <p className="mt-2 text-sm text-gray-600"><span className="font-semibold">Click to upload</span> or drag and drop</p>
                     <p className="text-xs text-gray-500">Add up to 5 images</p>
                   </div>
-                  <input type="file" multiple onChange={handleGalleryImageUpload} accept="image/*" className="hidden" />
+                  <input type="file" multiple ref={galleryFileInputRef} onChange={handleGalleryImageUpload} accept="image/*" className="hidden" />
                 </label>
                 {isUploading && <p className="text-sm text-gray-500 mt-2 flex items-center gap-2"><Loader className="h-4 w-4 animate-spin" /> Uploading images...</p>}
               </div>
@@ -294,20 +401,21 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
                 </div>
               </div>
               <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('placeDashboard.address')}</label><input type="text" {...register('address')} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('placeDashboard.city')}</label><input type="text" {...register('city')} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('placeDashboard.city')}</label>
+                  <Controller name="city" control={control} render={({ field }) => <CitySelector {...field} />} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Surrounding Service Areas</label>
+                  <Controller name="serviceAreas" control={control} render={({ field }) => <TagInput {...field} placeholder="e.g., Kuta, Seminyak..." />} />
+                </div>
+              </div>
               
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-md font-semibold text-gray-800 flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-gray-500"/>
-                    {t('placeDashboard.locationCoordinates')}
-                  </h4>
-                  <button 
-                    type="button" 
-                    onClick={handleConfirmLocation} 
-                    disabled={isConfirmingLocation}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-wait"
-                  >
+                  <h4 className="text-md font-semibold text-gray-800 flex items-center gap-2"><MapPin className="h-5 w-5 text-gray-500"/>{t('placeDashboard.locationCoordinates')}</h4>
+                  <button type="button" onClick={handleConfirmLocation} disabled={isConfirmingLocation} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-wait">
                     {isConfirmingLocation ? <Loader className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                     <span>{isConfirmingLocation ? t('locationModal.gettingLocation') : t('placeDashboard.confirmLocation')}</span>
                   </button>
@@ -315,14 +423,8 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ authInfo, onLogo
                 <p className="text-sm text-gray-600 mb-3">{t('placeDashboard.confirmLocationInfo')}</p>
                 {locationError && <p className="text-red-500 text-xs mb-3">{locationError}</p>}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.latitude')}</label>
-                    <input type="number" step="any" {...register('lat', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readOnly />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.longitude')}</label>
-                    <input type="number" step="any" {...register('lng', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readOnly />
-                  </div>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.latitude')}</label><input type="number" step="any" {...register('lat', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readOnly /></div>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.longitude')}</label><input type="number" step="any" {...register('lng', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readOnly /></div>
                 </div>
               </div>
 

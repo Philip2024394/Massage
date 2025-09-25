@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Users, Star, ChevronDown, Store, Home } from 'lucide-react';
+import { Users, ChevronDown, Store, Home, Map, Search } from 'lucide-react';
 import { FilterOptions } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 import { massageTypeKeys, placeServiceKeys } from '../data/services';
+import { indonesianCities } from '../data/indonesianCities';
 
 interface FilterBarProps {
   filters: FilterOptions;
@@ -23,12 +24,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 }) => {
   const { t } = useTranslation();
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [citySearch, setCitySearch] = useState('');
+  const typeDropdownRef = useRef<HTMLDivElement>(null);
+  const cityDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target as Node)) {
         setShowTypeDropdown(false);
+      }
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target as Node)) {
+        setShowCityDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -42,7 +49,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     onFiltersChange({ ...filters, massageTypes: newTypes });
   };
 
+  const handleCityChange = (city: string) => {
+    onFiltersChange({ ...filters, city: city });
+    setShowCityDropdown(false);
+  };
+
   const serviceKeysToDisplay = filters.serviceType === 'home' ? massageTypeKeys : placeServiceKeys;
+  const citiesToShow = ["All Cities", ...indonesianCities].filter(c => c.toLowerCase().includes(citySearch.toLowerCase()));
 
   return (
     <div className="bg-white shadow-sm border-b border-gray-100 p-4 w-full">
@@ -70,7 +83,46 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
         
         <div className="flex flex-wrap items-center gap-4">
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative" ref={cityDropdownRef}>
+            <button
+              onClick={() => setShowCityDropdown(!showCityDropdown)}
+              className="flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap bg-gray-100 text-gray-700 hover:bg-gray-200"
+            >
+              <Map className="h-4 w-4 text-gray-600" />
+              <span>{filters.city || 'All Cities'}</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${showCityDropdown ? 'rotate-180' : ''}`} />
+            </button>
+            {showCityDropdown && (
+              <div className="absolute top-full mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                <div className="p-2 border-b border-gray-200">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search city..."
+                      value={citySearch}
+                      onChange={(e) => setCitySearch(e.target.value)}
+                      className="w-full pl-9 pr-3 py-1.5 border-0 focus:ring-0 text-sm"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <ul className="max-h-72 overflow-y-auto">
+                  {citiesToShow.map((city) => (
+                    <li key={city}>
+                      <button
+                        onClick={() => handleCityChange(city === 'All Cities' ? '' : city)}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        {city}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+          <div className="relative" ref={typeDropdownRef}>
             <button
               onClick={() => setShowTypeDropdown(!showTypeDropdown)}
               className="flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -117,13 +169,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               </div>
             )}
           </div>
-          
-          <button
-            className="flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap bg-gray-100 text-gray-700 hover:bg-gray-200"
-          >
-            <Star className="h-4 w-4 text-yellow-500 fill-current" />
-            <span className="font-medium text-gray-700">{t('filterBar.rating')} {filters.minRating}+</span>
-          </button>
         </div>
       </div>
     </div>

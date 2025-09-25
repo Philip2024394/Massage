@@ -1,10 +1,11 @@
 import { faker } from '@faker-js/faker';
 import { MassagePlaceProfile } from '../types';
 import { massageTypeKeys } from './services';
+import { indonesianCities } from './indonesianCities';
 
-const baseLocation = { lat: 37.7749, lng: -122.4194 };
+const baseLocation = { lat: -6.2088, lng: 106.8456 }; // Jakarta
 
-function generateRandomLocation(baseLocation: { lat: number; lng: number }, radiusKm: number = 25) {
+function generateRandomLocation(baseLocation: { lat: number; lng: number }, radiusKm: number = 500) {
   const earthRadius = 6371;
   const randomDistance = Math.random() * radiusKm;
   const randomBearing = Math.random() * 2 * Math.PI;
@@ -46,7 +47,7 @@ export function generateMockPlaces(count: number = 15): MassagePlaceProfile[] {
       rating: Number((Math.random() * 1.5 + 3.5).toFixed(1)),
       reviewCount: faker.number.int({ min: 10, max: 250 }),
       address: faker.location.streetAddress(),
-      city: faker.helpers.arrayElement(['San Francisco', 'Oakland', 'San Jose', 'Palo Alto', 'Berkeley']),
+      city: faker.helpers.arrayElement(indonesianCities),
       location: {
         lat: Number(location.lat.toFixed(6)),
         lng: Number(location.lng.toFixed(6)),

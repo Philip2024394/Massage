@@ -100,6 +100,18 @@ export const TherapistProfilePage: React.FC = () => {
               <div className="flex items-center space-x-1"><Clock className="h-4 w-4" /><span>{t('therapistCard.experience', { experience: therapist.experience })}</span></div><span>•</span>
               <div className="flex items-center space-x-1.5"><Globe className="h-4 w-4" /><span>{therapist.languages.join(', ')}</span></div>
             </div>
+            
+            {therapist.serviceAreas && therapist.serviceAreas.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Also Serving</h4>
+                <div className="flex flex-wrap gap-2">
+                    {therapist.serviceAreas.map(area => (
+                    <span key={area} className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">{area}</span>
+                    ))}
+                </div>
+              </div>
+            )}
+
             <div className="mb-4">
               <h4 className="text-sm font-semibold text-gray-900 mb-2">{t('therapistCard.specialties')}</h4>
               <div className="flex flex-wrap gap-2">{therapist.specialties.map(key => <span key={key} className="px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium">{t(key)}</span>)}</div>

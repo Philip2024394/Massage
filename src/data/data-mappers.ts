@@ -7,6 +7,7 @@ export const mapSupabaseTherapistToProfile = (therapist: Tables<'therapists'>): 
   login_code: therapist.login_code,
   accountNumber: therapist.account_number || '',
   name: therapist.name || '',
+  email: therapist.email || '',
   profileImageUrl: therapist.profile_image_url || '',
   rating: therapist.rating || 0,
   reviewCount: therapist.review_count || 0,
@@ -30,6 +31,8 @@ export const mapSupabaseTherapistToProfile = (therapist: Tables<'therapists'>): 
   phone: therapist.phone || '',
   languages: therapist.languages || [],
   certifications: therapist.certifications || [],
+  serviceAreas: therapist.service_areas || [],
+  accountExpiry: therapist.account_expiry || undefined,
 });
 
 export const mapSupabasePlaceToProfile = (place: Tables<'places'>): MassagePlaceProfile => {
@@ -39,6 +42,7 @@ export const mapSupabasePlaceToProfile = (place: Tables<'places'>): MassagePlace
     login_code: place.login_code,
     accountNumber: place.account_number || '',
     name: place.name || '',
+    email: place.email || '',
     profileImageUrl: place.profile_image_url || '',
     galleryImageUrls: place.gallery_image_urls || [],
     rating: place.rating || 0,
@@ -60,6 +64,8 @@ export const mapSupabasePlaceToProfile = (place: Tables<'places'>): MassagePlace
     openingHours: openingHours,
     isOpen: isPlaceOpen(openingHours),
     status: place.status || 'pending',
+    serviceAreas: place.service_areas || [],
+    accountExpiry: place.account_expiry || undefined,
   };
 };
 

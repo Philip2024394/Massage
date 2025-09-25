@@ -24,10 +24,11 @@ export const useAuth = () => {
     }
   }, []);
 
-  const login = useCallback(async (code: string): Promise<string | void> => {
-    const upperCaseCode = code.toUpperCase();
+  const login = useCallback(async (emailOrAdmin: string, code: string): Promise<string | void> => {
+    const upperCaseEmail = emailOrAdmin.toUpperCase();
 
-    if (upperCaseCode === ADMIN_CODE) {
+    // Handle admin login separately
+    if (upperCaseEmail === ADMIN_CODE) {
       const adminAuthInfo: AuthInfo = { code: ADMIN_CODE, type: 'admin' };
       localStorage.setItem('authInfo', JSON.stringify(adminAuthInfo));
       setAuthInfo(adminAuthInfo);
@@ -35,39 +36,32 @@ export const useAuth = () => {
       return;
     }
 
+    // Handle user login
+    if (!code) {
+      return 'Login code is required.';
+    }
+
     try {
-      const { data: therapist, error: therapistError } = await supabase
-        .from('therapists')
-        .select('login_code')
-        .eq('login_code', upperCaseCode)
-        .single();
-      
-      if (therapist) {
-        const therapistAuthInfo: AuthInfo = { code: upperCaseCode, type: 'therapist' };
-        localStorage.setItem('authInfo', JSON.stringify(therapistAuthInfo));
-        setAuthInfo(therapistAuthInfo);
-        navigate(`/therapist-dashboard/${upperCaseCode}`);
-        return;
-      }
+      const { data, error } = await supabase.functions.invoke('secure-login', {
+        body: { email: emailOrAdmin, code },
+      });
 
-      const { data: place, error: placeError } = await supabase
-        .from('places')
-        .select('login_code')
-        .eq('login_code', upperCaseCode)
-        .single();
-      
-      if (place) {
-        const placeAuthInfo: AuthInfo = { code: upperCaseCode, type: 'place' };
-        localStorage.setItem('authInfo', JSON.stringify(placeAuthInfo));
-        setAuthInfo(placeAuthInfo);
-        navigate(`/place-dashboard/${upperCaseCode}`);
-        return;
+      if (error) {
+        throw new Error(error.message);
       }
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      const { type, login_code } = data;
+      const userAuthInfo: AuthInfo = { code: login_code, type };
+      localStorage.setItem('authInfo', JSON.stringify(userAuthInfo));
+      setAuthInfo(userAuthInfo);
+      navigate(`/${type}-dashboard/${login_code}`);
 
-      return 'Invalid code. Please try again.';
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login error:", err);
-      return 'An error occurred during login.';
+      return err.message || 'An error occurred during login.';
     }
   }, [navigate]);
 

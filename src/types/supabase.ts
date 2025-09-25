@@ -11,10 +11,13 @@ export type Database = {
     Tables: {
       places: {
         Row: {
+          account_expiry: string | null
           account_number: string
           address: string | null
           city: string | null
           created_at: string
+          email: string | null
+          failed_login_attempts: number
           gallery_image_urls: string[] | null
           id: string
           languages: string[] | null
@@ -31,13 +34,17 @@ export type Database = {
           rating: number
           review_count: number
           services: string[] | null
+          service_areas: string[] | null
           status: Database["public"]["Enums"]["place_status"]
         }
         Insert: {
+          account_expiry?: string | null
           account_number: string
           address?: string | null
           city?: string | null
           created_at?: string
+          email?: string | null
+          failed_login_attempts?: number
           gallery_image_urls?: string[] | null
           id?: string
           languages?: string[] | null
@@ -54,13 +61,17 @@ export type Database = {
           rating?: number
           review_count?: number
           services?: string[] | null
+          service_areas?: string[] | null
           status?: Database["public"]["Enums"]["place_status"]
         }
         Update: {
+          account_expiry?: string | null
           account_number?: string
           address?: string | null
           city?: string | null
           created_at?: string
+          email?: string | null
+          failed_login_attempts?: number
           gallery_image_urls?: string[] | null
           id?: string
           languages?: string[] | null
@@ -77,6 +88,7 @@ export type Database = {
           rating?: number
           review_count?: number
           services?: string[] | null
+          service_areas?: string[] | null
           status?: Database["public"]["Enums"]["place_status"]
         }
         Relationships: []
@@ -117,15 +129,36 @@ export type Database = {
         }
         Relationships: []
       }
+      special_activation_codes: {
+        Row: {
+          code: string
+          id: string
+          last_used_at: string | null
+        }
+        Insert: {
+          code: string
+          id?: string
+          last_used_at?: string | null
+        }
+        Update: {
+          code?: string
+          id?: string
+          last_used_at?: string | null
+        }
+        Relationships: []
+      }
       therapists: {
         Row: {
+          account_expiry: string | null
           account_number: string
           address: string | null
           bio: string | null
           certifications: string[] | null
           city: string | null
           created_at: string
+          email: string | null
           experience: number | null
+          failed_login_attempts: number
           id: string
           is_online: boolean
           languages: string[] | null
@@ -142,16 +175,20 @@ export type Database = {
           rating: number
           review_count: number
           specialties: string[] | null
+          service_areas: string[] | null
           status: Database["public"]["Enums"]["therapist_status"]
         }
         Insert: {
+          account_expiry?: string | null
           account_number: string
           address?: string | null
           bio?: string | null
           certifications?: string[] | null
           city?: string | null
           created_at?: string
+          email?: string | null
           experience?: number | null
+          failed_login_attempts?: number
           id?: string
           is_online?: boolean
           languages?: string[] | null
@@ -168,16 +205,20 @@ export type Database = {
           rating?: number
           review_count?: number
           specialties?: string[] | null
+          service_areas?: string[] | null
           status?: Database["public"]["Enums"]["therapist_status"]
         }
         Update: {
+          account_expiry?: string | null
           account_number?: string
           address?: string | null
           bio?: string | null
           certifications?: string[] | null
           city?: string | null
           created_at?: string
+          email?: string | null
           experience?: number | null
+          failed_login_attempts?: number
           id?: string
           is_online?: boolean
           languages?: string[] | null
@@ -194,6 +235,7 @@ export type Database = {
           rating?: number
           review_count?: number
           specialties?: string[] | null
+          service_areas?: string[] | null
           status?: Database["public"]["Enums"]["therapist_status"]
         }
         Relationships: []
@@ -206,9 +248,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      place_status: "pending" | "active" | "blocked"
+      place_status: "pending" | "active" | "blocked" | "unpaid"
       review_status: "pending" | "approved" | "rejected"
-      therapist_status: "pending" | "active" | "blocked"
+      therapist_status: "pending" | "active" | "blocked" | "unpaid"
       user_account_type: "therapist" | "place"
     }
     CompositeTypes: {

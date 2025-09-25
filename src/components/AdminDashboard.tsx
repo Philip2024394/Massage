@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { LogOut, Shield, Users, MessageSquare, Check, X, Building, Home } from 'lucide-react';
+import { LogOut, Users, Check, Building, Home, Key, Gift, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { TherapistProfile, MassagePlaceProfile, Review } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 import { Logo } from './Logo';
+import { AdminActivationModal } from './AdminActivationModal';
+import { SpecialCodesList } from './SpecialCodesList';
 import { supabase } from '../supabaseClient';
 import { mapSupabaseTherapistToProfile, mapSupabasePlaceToProfile, mapSupabaseReviewToAppReview } from '../data/data-mappers';
 
@@ -20,11 +22,13 @@ interface AdminDashboardProps {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'therapists' | 'places' | 'reviews'>('therapists');
+  const [activeTab, setActiveTab] = useState<'therapists' | 'places' | 'reviews' | 'codes'>('therapists');
   const [therapists, setTherapists] = useState<TherapistProfile[]>([]);
   const [places, setPlaces] = useState<MassagePlaceProfile[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isActivationModalOpen, setActivationModalOpen] = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState<{id: string, name: string, type: 'therapist' | 'place'} | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -52,20 +56,44 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     fetchData();
   }, [fetchData]);
 
-  const handleUpdateTherapistStatus = async (id: string, status: 'active' | 'pending' | 'blocked') => {
-    const { error } = await supabase.from('therapists').update({ status }).eq('id', id);
-    if (!error) fetchData();
-  };
-  
-  const handleUpdatePlaceStatus = async (id: string, status: 'active' | 'pending' | 'blocked') => {
-    const { error } = await supabase.from('places').update({ status }).eq('id', id);
-    if (!error) fetchData();
+  const handleUpdateStatus = async (id: string, newStatus: 'active' | 'blocked', type: 'therapist' | 'place') => {
+    const { error } = await supabase.functions.invoke('admin-update-status', {
+      body: { entityId: id, entityType: type, status: newStatus }
+    });
+    if (error) {
+      console.error(`Status update failed:`, error);
+      alert(`Failed to update status: ${error.message}`);
+    } else {
+      await fetchData();
+    }
   };
 
   const handleUpdateReview = async (id: string, newStatus: 'approved' | 'rejected') => {
     const { error } = await supabase.from('reviews').update({ status: newStatus }).eq('id', id);
     if (!error) fetchData();
   };
+
+  const handleOpenActivationModal = (entity: {id: string, name: string, type: 'therapist' | 'place'}) => {
+    setSelectedEntity(entity);
+    setActivationModalOpen(true);
+  };
+
+  const handleConfirmActivation = async () => {
+    if (!selectedEntity) return;
+    
+    const { error } = await supabase.functions.invoke('admin-activate-account', {
+      body: { entityId: selectedEntity.id, entityType: selectedEntity.type }
+    });
+
+    if (error) {
+      console.error('Admin activation error:', error);
+      alert(`Activation failed: ${error.message}`);
+    } else {
+      await fetchData();
+      setActivationModalOpen(false);
+    }
+  };
+
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Admin Panel...</div>;
 
@@ -74,13 +102,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center">
               <Logo layout="horizontal" className="h-10 w-auto" />
-              <span className="text-gray-500">•</span>
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                <Shield className="h-5 w-5 text-red-600" />
-                <span>{t('adminDashboard.title')}</span>
-              </h2>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <Link to="/home" title="View Home Page" className="p-2 text-gray-600 hover:text-primary-600 rounded-full hover:bg-gray-100 transition-colors">
@@ -99,12 +122,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <TabButton id="therapists" activeTab={activeTab} setActiveTab={setActiveTab} icon={<Users className="h-5 w-5" />} label={t('adminDashboard.manageTherapists')} />
             <TabButton id="places" activeTab={activeTab} setActiveTab={setActiveTab} icon={<Building className="h-5 w-5" />} label={t('adminDashboard.managePlaces')} />
             <TabButton id="reviews" activeTab={activeTab} setActiveTab={setActiveTab} icon={<MessageSquare className="h-5 w-5" />} label={t('adminDashboard.manageReviews')} />
+            <TabButton id="codes" activeTab={activeTab} setActiveTab={setActiveTab} icon={<Gift className="h-5 w-5" />} label="Activation Codes" />
           </nav>
         </div>
-        {activeTab === 'therapists' && <TherapistsTable therapists={therapists} onUpdateStatus={handleUpdateTherapistStatus} t={t} />}
-        {activeTab === 'places' && <PlacesTable places={places} onUpdateStatus={handleUpdatePlaceStatus} t={t} />}
+        {activeTab === 'therapists' && <TherapistsTable therapists={therapists} onUpdateStatus={handleUpdateStatus} onActivate={handleOpenActivationModal} t={t} />}
+        {activeTab === 'places' && <PlacesTable places={places} onUpdateStatus={handleUpdateStatus} onActivate={handleOpenActivationModal} t={t} />}
         {activeTab === 'reviews' && <ReviewsTable reviews={reviews} profiles={[...therapists, ...places]} onUpdateReview={handleUpdateReview} t={t} />}
+        {activeTab === 'codes' && <SpecialCodesList />}
       </main>
+      {selectedEntity && (
+        <AdminActivationModal 
+          isOpen={isActivationModalOpen}
+          onClose={() => setActivationModalOpen(false)}
+          onConfirm={handleConfirmActivation}
+          entityName={selectedEntity.name}
+        />
+      )}
     </div>
   );
 };
@@ -115,7 +148,14 @@ const TabButton = ({ id, activeTab, setActiveTab, icon, label }: any) => (
   </button>
 );
 
-const TherapistsTable = ({ therapists, onUpdateStatus, t }: any) => (
+const statusColors: { [key: string]: string } = {
+  active: 'bg-green-100 text-green-800',
+  pending: 'bg-yellow-100 text-yellow-800',
+  blocked: 'bg-red-100 text-red-800',
+  unpaid: 'bg-blue-100 text-blue-800',
+};
+
+const TherapistsTable = ({ therapists, onUpdateStatus, onActivate, t }: any) => (
   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
     <table className="min-w-full divide-y divide-gray-200">
       <thead className="bg-gray-50">
@@ -131,9 +171,9 @@ const TherapistsTable = ({ therapists, onUpdateStatus, t }: any) => (
           <tr key={therapist.id}>
             <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center"><img className="h-10 w-10 rounded-full object-cover" src={therapist.profileImageUrl || '/placeholder.png'} alt={therapist.name} /><div className="ml-4"><div className="text-sm font-medium text-gray-900">{therapist.name}</div><div className="text-sm text-gray-500">{therapist.location.city}</div></div></div></td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{therapist.phone}</td>
-            <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${therapist.status === 'active' ? 'bg-green-100 text-green-800' : therapist.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{t(`adminDashboard.${therapist.status}`)}</span></td>
+            <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[therapist.status]}`}>{t(`adminDashboard.${therapist.status}`)}</span></td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              {therapist.status === 'pending' ? <button onClick={() => onUpdateStatus(therapist.id, 'active')} className="flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200"><Check className="h-4 w-4" /><span>{t('adminDashboard.approve')}</span></button> : <div className="flex items-center space-x-2"><ToggleSwitch isOn={therapist.status === 'active'} onToggle={(isOn) => onUpdateStatus(therapist.id, isOn ? 'active' : 'blocked')} /><span className="text-xs text-gray-600">{t('adminDashboard.visibility')}</span></div>}
+              {therapist.status === 'unpaid' ? <button onClick={() => onActivate({id: therapist.id, name: therapist.name, type: 'therapist'})} className="flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200"><Key className="h-4 w-4" /><span>Activate</span></button> : <div className="flex items-center space-x-2"><ToggleSwitch isOn={therapist.status === 'active'} onToggle={(isOn) => onUpdateStatus(therapist.id, isOn ? 'active' : 'blocked', 'therapist')} /><span className="text-xs text-gray-600">{t('adminDashboard.visibility')}</span></div>}
             </td>
           </tr>
         ))}
@@ -142,7 +182,7 @@ const TherapistsTable = ({ therapists, onUpdateStatus, t }: any) => (
   </motion.div>
 );
 
-const PlacesTable = ({ places, onUpdateStatus, t }: any) => (
+const PlacesTable = ({ places, onUpdateStatus, onActivate, t }: any) => (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
@@ -158,9 +198,9 @@ const PlacesTable = ({ places, onUpdateStatus, t }: any) => (
             <tr key={place.id}>
               <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center"><img className="h-10 w-10 rounded-full object-cover" src={place.profileImageUrl || '/placeholder.png'} alt={place.name} /><div className="ml-4"><div className="text-sm font-medium text-gray-900">{place.name}</div><div className="text-sm text-gray-500">{place.city}</div></div></div></td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{place.phone}</td>
-              <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${place.status === 'active' ? 'bg-green-100 text-green-800' : place.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{t(`adminDashboard.${place.status}`)}</span></td>
+              <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[place.status]}`}>{t(`adminDashboard.${place.status}`)}</span></td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                {place.status === 'pending' ? <button onClick={() => onUpdateStatus(place.id, 'active')} className="flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200"><Check className="h-4 w-4" /><span>{t('adminDashboard.approve')}</span></button> : <div className="flex items-center space-x-2"><ToggleSwitch isOn={place.status === 'active'} onToggle={(isOn) => onUpdateStatus(place.id, isOn ? 'active' : 'blocked')} /><span className="text-xs text-gray-600">{t('adminDashboard.visibility')}</span></div>}
+                {place.status === 'unpaid' ? <button onClick={() => onActivate({id: place.id, name: place.name, type: 'place'})} className="flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200"><Key className="h-4 w-4" /><span>Activate</span></button> : <div className="flex items-center space-x-2"><ToggleSwitch isOn={place.status === 'active'} onToggle={(isOn) => onUpdateStatus(place.id, isOn ? 'active' : 'blocked', 'place')} /><span className="text-xs text-gray-600">{t('adminDashboard.visibility')}</span></div>}
               </td>
             </tr>
           ))}
@@ -196,7 +236,7 @@ const ReviewsTable = ({ reviews, profiles, onUpdateReview, t }: any) => {
                   {review.status === 'pending' && (
                     <>
                       <button onClick={() => onUpdateReview(review.id, 'approved')} className="flex items-center space-x-2 px-2 py-1 rounded text-xs bg-green-100 text-green-700 hover:bg-green-200"><Check className="h-4 w-4" /><span>{t('adminDashboard.approve')}</span></button>
-                      <button onClick={() => onUpdateReview(review.id, 'rejected')} className="flex items-center space-x-2 px-2 py-1 rounded text-xs bg-orange-100 text-orange-700 hover:bg-orange-200"><X className="h-4 w-4" /><span>{t('adminDashboard.reject')}</span></button>
+                      <button onClick={() => onUpdateReview(review.id, 'rejected')} className="flex items-center space-x-2 px-2 py-1 rounded text-xs bg-orange-100 text-orange-700 hover:bg-orange-200"><span>{t('adminDashboard.reject')}</span></button>
                     </>
                   )}
                 </div>

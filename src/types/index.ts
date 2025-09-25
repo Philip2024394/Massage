@@ -3,6 +3,7 @@ export interface TherapistProfile {
   login_code: string;
   accountNumber: string;
   name: string;
+  email: string;
   profileImageUrl: string;
   rating: number;
   reviewCount: number;
@@ -10,7 +11,7 @@ export interface TherapistProfile {
   bio: string;
   experience: number;
   isOnline: boolean;
-  status: 'active' | 'pending' | 'blocked';
+  status: 'active' | 'pending' | 'blocked' | 'unpaid';
   location: {
     lat: number;
     lng: number;
@@ -27,6 +28,8 @@ export interface TherapistProfile {
   phone: string;
   languages: string[];
   certifications: string[];
+  accountExpiry?: string;
+  serviceAreas: string[];
 }
 
 export interface DayHours {
@@ -49,6 +52,7 @@ export interface MassagePlaceProfile {
   login_code: string;
   accountNumber: string;
   name: string;
+  email: string;
   profileImageUrl: string;
   galleryImageUrls: string[];
   rating: number;
@@ -70,7 +74,9 @@ export interface MassagePlaceProfile {
   };
   openingHours: OpeningHours | null;
   isOpen: boolean;
-  status: 'active' | 'pending' | 'blocked';
+  status: 'active' | 'pending' | 'blocked' | 'unpaid';
+  accountExpiry?: string;
+  serviceAreas: string[];
 }
 
 export type TherapistFilterData = {
@@ -109,6 +115,7 @@ export interface FilterOptions {
     min: number;
     max: number;
   };
+  city: string;
 }
 
 export type Language = 'en' | 'id';

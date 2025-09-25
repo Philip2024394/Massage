@@ -5,10 +5,11 @@ import { SwipeableCards } from '../components/SwipeableCards';
 import { FilterOptions, AuthInfo, TherapistProfile, MassagePlaceProfile } from '../types';
 import { PlaceCard } from '../components/PlaceCard';
 import { useTranslation } from '../hooks/useTranslation';
+import { Footer } from '../components/Footer';
 
 interface HomePageProps {
   authInfo: AuthInfo | null;
-  onLogin: (code: string) => Promise<string | void>;
+  onLogin: (email: string, code: string) => Promise<string | void>;
   onLogout: () => void;
   filteredTherapists: TherapistProfile[];
   filteredPlaces: MassagePlaceProfile[];
@@ -37,7 +38,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <>
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <Header authInfo={authInfo} onLogin={onLogin} onLogout={onLogout} />
       
       <FilterBar
@@ -49,7 +50,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         totalPlacesCount={totalPlacesCount}
       />
       
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {filters.serviceType === 'home' ? (
           <div className="w-full max-w-md mx-auto">
             <SwipeableCards
@@ -77,6 +78,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         )}
       </main>
-    </>
+      <Footer />
+    </div>
   );
 };

@@ -10,7 +10,7 @@ export const LoadingScreen: React.FC = () => (
     transition={{ duration: 0.5 }}
     className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white"
   >
-    <Logo layout="vertical" className="h-40 w-auto" />
+    <Logo layout="vertical" className="w-auto" />
     <div className="mt-8 flex items-center space-x-2 text-gray-500">
       <Loader className="h-5 w-5 animate-spin" />
       <span>Loading Experience...</span>

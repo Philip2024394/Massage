@@ -138,6 +138,7 @@
     "active": "Aktif",
     "blocked": "Diblokir",
     "pending": "Menunggu Persetujuan",
+    "unpaid": "Belum Dibayar",
     "approve": "Setujui",
     "reject": "Tolak",
     "whatsappNumber": "Nomor WhatsApp",

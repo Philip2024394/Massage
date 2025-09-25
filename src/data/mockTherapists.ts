@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
 import { TherapistProfile } from '../types';
 import { massageTypeKeys, specialtyKeys } from './services';
+import { indonesianCities } from './indonesianCities';
 
-// Base location (San Francisco area)
-const baseLocation = { lat: 37.7749, lng: -122.4194 };
+const baseLocation = { lat: -6.2088, lng: 106.8456 }; // Jakarta
 
-function generateRandomLocation(baseLocation: { lat: number; lng: number }, radiusKm: number = 25) {
+function generateRandomLocation(baseLocation: { lat: number; lng: number }, radiusKm: number = 500) {
   const earthRadius = 6371; // Earth's radius in kilometers
   const randomDistance = Math.random() * radiusKm;
   const randomBearing = Math.random() * 2 * Math.PI;
@@ -64,7 +64,7 @@ export function generateMockTherapists(count: number = 20): TherapistProfile[] {
         lat: Number(location.lat.toFixed(6)),
         lng: Number(location.lng.toFixed(6)),
         address: faker.location.streetAddress(),
-        city: faker.helpers.arrayElement(['San Francisco', 'Oakland', 'San Jose', 'Palo Alto', 'Berkeley'])
+        city: faker.helpers.arrayElement(indonesianCities)
       },
       pricing: {
         session60: faker.number.int({ min: 80000, max: 150000 }),
@@ -73,7 +73,7 @@ export function generateMockTherapists(count: number = 20): TherapistProfile[] {
       },
       massageTypes: selectedMassageTypes,
       phone: `+6281${faker.string.numeric(9)}`,
-      languages: faker.helpers.arrayElements(['English', 'Spanish', 'Mandarin', 'French', 'German', 'Indonesian', 'Bahasa Indonesia'], { min: 1, max: 2 }),
+      languages: faker.helpers.arrayElements(['Bahasa Indonesia', 'English', 'Javanese', 'Sundanese'], { min: 1, max: 2 }),
       certifications: ['Licensed Massage Therapist'],
       therapistNumber: faker.string.alphanumeric(8).toUpperCase(),
     };

@@ -12,6 +12,12 @@ import { TherapistProfilePage } from './pages/TherapistProfilePage';
 import { PlaceProfilePage } from './pages/PlaceProfilePage';
 import { TherapistDashboard } from './components/TherapistDashboard';
 import { PlaceDashboard } from './components/PlaceDashboard';
+import { ProfileSetupPage } from './pages/ProfileSetupPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { PaymentPage } from './pages/PaymentPage';
+import { StripeCheckoutPage } from './pages/StripeCheckoutPage';
+import { ActivationSuccessPage } from './pages/ActivationSuccessPage';
+import { AgentSignUpPage } from './pages/AgentSignUpPage';
 import { UserLocation, FilterOptions, TherapistProfile, MassagePlaceProfile } from './types';
 import { calculateDistance, getWhatsAppUrl } from './utils/location';
 import { supabase } from './supabaseClient';
@@ -38,7 +44,7 @@ function AppContent() {
   const [dataLoading, setDataLoading] = useState(true);
   
   const [filters, setFilters] = useState<FilterOptions>({
-    serviceType: 'home', onlineOnly: false, massageTypes: [], maxDistance: 50, minRating: 0, priceRange: { min: 0, max: 500 }
+    serviceType: 'home', onlineOnly: false, massageTypes: [], maxDistance: 50, minRating: 0, priceRange: { min: 0, max: 500 }, city: ''
   });
 
   const fetchAllData = useCallback(async () => {
@@ -90,6 +96,7 @@ function AppContent() {
   }, [places, userLocation]);
 
   const filteredTherapists = useMemo(() => therapistsWithDistance.filter(therapist => {
+      if (filters.city && therapist.location.city !== filters.city) return false;
       if (filters.onlineOnly && !therapist.isOnline) return false;
       if (filters.massageTypes.length > 0 && !filters.massageTypes.some(type => therapist.massageTypes?.includes(type))) return false;
       if (therapist.distance && therapist.distance > filters.maxDistance) return false;
@@ -98,6 +105,7 @@ function AppContent() {
     }), [therapistsWithDistance, filters]);
   
   const filteredPlaces = useMemo(() => placesWithDistance.filter(place => {
+      if (filters.city && place.city !== filters.city) return false;
       if (filters.onlineOnly && !place.isOpen) return false;
       if (filters.massageTypes.length > 0 && !filters.massageTypes.some(type => place.services?.includes(type))) return false;
       if (place.distance && place.distance > filters.maxDistance) return false;
@@ -129,6 +137,12 @@ function AppContent() {
             <Route path="/therapist-dashboard/:code" element={authInfo?.type === 'therapist' ? <TherapistDashboard authInfo={authInfo} onLogout={logout} onProfileUpdate={fetchAllData} /> : <Navigate to="/home" />} />
             <Route path="/place-dashboard/:code" element={authInfo?.type === 'place' ? <PlaceDashboard authInfo={authInfo} onLogout={logout} onProfileUpdate={fetchAllData} /> : <Navigate to="/home" />} />
             <Route path="/admin-dashboard" element={authInfo?.type === 'admin' ? <AdminDashboard onLogout={logout} /> : <Navigate to="/home" />} />
+            <Route path="/setup-profile" element={<ProfileSetupPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/pay" element={<PaymentPage />} />
+            <Route path="/stripe-checkout" element={<StripeCheckoutPage />} />
+            <Route path="/activation-success" element={<ActivationSuccessPage />} />
+            <Route path="/agent-signup" element={<AgentSignUpPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/package-details" element={<PackageDetailsPage />} />
             <Route path="*" element={<Navigate to="/" />} />

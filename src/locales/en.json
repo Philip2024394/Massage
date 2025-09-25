@@ -138,6 +138,7 @@
     "active": "Active",
     "blocked": "Blocked",
     "pending": "Pending Approval",
+    "unpaid": "Unpaid",
     "approve": "Approve",
     "reject": "Reject",
     "whatsappNumber": "WhatsApp Number",
