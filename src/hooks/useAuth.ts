@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { AuthInfo } from '../types';
 
-const ADMIN_CODE = 'ADMIN1';
+const ADMIN_CODE = import.meta.env.VITE_ADMIN_CODE;
 
 export const useAuth = () => {
   const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);

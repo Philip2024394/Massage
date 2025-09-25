@@ -122,7 +122,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <TabButton id="therapists" activeTab={activeTab} setActiveTab={setActiveTab} icon={<Users className="h-5 w-5" />} label={t('adminDashboard.manageTherapists')} />
             <TabButton id="places" activeTab={activeTab} setActiveTab={setActiveTab} icon={<Building className="h-5 w-5" />} label={t('adminDashboard.managePlaces')} />
             <TabButton id="reviews" activeTab={activeTab} setActiveTab={setActiveTab} icon={<MessageSquare className="h-5 w-5" />} label={t('adminDashboard.manageReviews')} />
-            <TabButton id="codes" activeTab={activeTab} setActiveTab={setActiveTab} icon={<Gift className="h-5 w-5" />} label="Activation Codes" />
+            <TabButton id="codes" activeTab={activeTab} setActiveTab={setActiveTab} icon={<Gift className="h-5 w-5" />} label={t('adminDashboard.activationCodes')} />
           </nav>
         </div>
         {activeTab === 'therapists' && <TherapistsTable therapists={therapists} onUpdateStatus={handleUpdateStatus} onActivate={handleOpenActivationModal} t={t} />}

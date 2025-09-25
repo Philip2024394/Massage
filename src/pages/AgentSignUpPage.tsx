@@ -6,7 +6,7 @@ import { getWhatsAppUrl } from '../utils/location';
 
 export const AgentSignUpPage: React.FC = () => {
   const salesNumber = import.meta.env.VITE_SALES_WHATSAPP_NUMBER;
-  const message = "I would like more information to become a 2Go Agent For Massage Therapist And Places.";
+  const message = "I would like more information about the 2Go Agent program for massage therapists and places.";
   const whatsAppUrl = getWhatsAppUrl(salesNumber, message);
 
   const BenefitCard: React.FC<{ icon: React.ReactNode; title: string; content: string }> = ({ icon, title, content }) => (
@@ -34,7 +34,7 @@ export const AgentSignUpPage: React.FC = () => {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Become a 2Go Agent</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">2Go Agent</h1>
           <p className="text-md text-gray-600 mb-8">Join our network and earn by helping us grow.</p>
           
           <div className="space-y-8 mb-10">

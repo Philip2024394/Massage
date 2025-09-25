@@ -8,7 +8,7 @@ import { InstallPromptModal } from './InstallPromptModal';
 
 interface HeaderProps {
   authInfo: AuthInfo | null;
-  onLogin: (code: string) => Promise<string | void>;
+  onLogin: (email: string, code: string) => Promise<string | void>;
   onLogout: () => void;
 }
 

@@ -36,11 +36,15 @@ serve(async (req) => {
         throw new Error('Invalid activation code.');
       }
 
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-      if (codeData.last_used_at && new Date(codeData.last_used_at) > threeDaysAgo) {
-        throw new Error('This code has been used recently. Please try again later.');
+      // Check for 3-day cooldown
+      if (codeData.last_used_at) {
+        const lastUsedDate = new Date(codeData.last_used_at);
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        
+        if (lastUsedDate > threeDaysAgo) {
+          throw new Error('This code is on cooldown. Please try again later or use a different code.');
+        }
       }
 
       months = 1; // All special codes are for 1 month
@@ -57,7 +61,7 @@ serve(async (req) => {
       }
 
     } else {
-      // This path is for Stripe payment success (no code provided)
+      // This path is for Stripe payment simulation (no code provided)
       months = 1;
     }
 
