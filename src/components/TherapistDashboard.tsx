@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { User, LogOut, Camera, Badge, Home, MessageCircle, Check, MapPin, Loader, Globe, Key, Copy, Star } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm, useWatch, Controller } from 'react-hook-form';
-import { AuthInfo, TherapistProfile } from '../types';
+import { TherapistProfile } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 import { Logo } from './Logo';
 import { CitySelector } from './CitySelector';
@@ -13,8 +13,9 @@ import { massageTypeKeys, specialtyKeys, languageKeys } from '../data/services';
 import { supabase } from '../supabaseClient';
 import { mapSupabaseTherapistToProfile } from '../data/data-mappers';
 import { getWhatsAppUrl, getCurrentLocation } from '../utils/location';
+import { useAuth } from '../context/AuthContext';
 
-type ProfileForm = Omit<TherapistProfile, 'id' | 'rating' | 'reviewCount' | 'distance' | 'status' | 'location' | 'accountNumber' | 'login_code'> & {
+type ProfileForm = Omit<TherapistProfile, 'id' | 'rating' | 'reviewCount' | 'distance' | 'status' | 'location' | 'accountNumber' | 'login_code' | 'email'> & {
   address: string;
   city: string;
   lat: number;
@@ -25,14 +26,10 @@ type ProfileForm = Omit<TherapistProfile, 'id' | 'rating' | 'reviewCount' | 'dis
   serviceAreas: string[];
 };
 
-interface TherapistDashboardProps {
-  authInfo: AuthInfo;
-  onLogout: () => void;
-  onProfileUpdate: () => Promise<void>;
-}
+export const TherapistDashboard: React.FC = () => {
+  const { profile: authProfile, signOut } = useAuth();
+  const therapistAuthProfile = authProfile as TherapistProfile;
 
-export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo, onLogout, onProfileUpdate }) => {
-  const { code } = useParams<{ code: string }>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -47,23 +44,19 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
   const phoneValue = useWatch({ control, name: 'phone' });
 
   const fetchProfile = useCallback(async () => {
-    if (!code) return;
+    if (!therapistAuthProfile?.id) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('therapists').select('*').eq('login_code', code);
+      const { data, error } = await supabase.from('therapists').select('*').eq('id', therapistAuthProfile.id).single();
 
-      if (error) {
+      if (error || !data) {
         console.error('Error fetching therapist profile:', error);
-        navigate('/setup-profile', { state: { code, type: 'therapist' }, replace: true });
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        navigate('/setup-profile', { state: { code, type: 'therapist' }, replace: true });
+        signOut();
+        navigate('/login');
         return;
       }
       
-      const profile = mapSupabaseTherapistToProfile(data[0]);
+      const profile = mapSupabaseTherapistToProfile(data);
       setTherapistProfile(profile);
       reset({
         name: profile.name, bio: profile.bio, experience: profile.experience, phone: profile.phone,
@@ -77,11 +70,12 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
       });
     } catch (error) {
       console.error('Unhandled error in fetchProfile:', error);
-      navigate('/setup-profile', { state: { code, type: 'therapist' }, replace: true });
+      signOut();
+      navigate('/login');
     } finally {
       setLoading(false);
     }
-  }, [code, reset, navigate]);
+  }, [therapistAuthProfile?.id, reset, navigate, signOut]);
 
   useEffect(() => {
     fetchProfile();
@@ -113,16 +107,12 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
         
         const { publicUrl } = uploadResult;
 
-        const { error: updateError } = await supabase.functions.invoke('update-profile', {
-          body: {
-            type: 'therapist',
-            code: therapistProfile.login_code,
-            payload: { profile_image_url: publicUrl }
-          }
-        });
+        const { error: updateError } = await supabase
+          .from('therapists')
+          .update({ profile_image_url: publicUrl })
+          .eq('id', therapistProfile.id);
 
         if (updateError) throw updateError;
-
         await fetchProfile();
       } catch (error) {
         console.error("Error handling image upload:", error);
@@ -136,17 +126,13 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
     if (!therapistProfile) return;
     const newStatus = !therapistProfile.isOnline;
     
-    const { error } = await supabase.functions.invoke('update-profile', {
-      body: {
-        type: 'therapist',
-        code: therapistProfile.login_code,
-        payload: { is_online: newStatus }
-      }
-    });
+    const { error } = await supabase
+      .from('therapists')
+      .update({ is_online: newStatus })
+      .eq('id', therapistProfile.id);
 
     if (!error) {
-      setTherapistProfile(prev => prev ? { ...prev, isOnline: newStatus } : null);
-      setValue('isOnline', newStatus);
+      await fetchProfile();
     } else {
       console.error("Error updating status:", error);
     }
@@ -211,17 +197,14 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
       service_areas: data.serviceAreas,
     };
 
-    const { error } = await supabase.functions.invoke('update-profile', {
-      body: {
-        type: 'therapist',
-        code: therapistProfile.login_code,
-        payload: payload
-      }
-    });
+    const { error } = await supabase
+      .from('therapists')
+      .update(payload)
+      .eq('id', therapistProfile.id);
 
     if (!error) {
-      await onProfileUpdate();
-      navigate('/home');
+      await fetchProfile();
+      alert('Profile updated successfully!');
     } else {
       console.error("Error updating profile:", error);
       alert(`Profile update failed: ${error.message}`);
@@ -252,7 +235,7 @@ export const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ authInfo
                 </button>
               </div>
               <span className="text-sm font-medium text-gray-700 hidden md:block truncate min-w-0">{therapistProfile.name}</span>
-              <button onClick={onLogout} className="flex-shrink-0 p-2 text-gray-700 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors" title={t('header.logout')}>
+              <button onClick={signOut} className="flex-shrink-0 p-2 text-gray-700 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors" title={t('header.logout')}>
                 <LogOut className="h-5 w-5" />
               </button>
             </div>

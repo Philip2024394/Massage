@@ -1,10 +1,11 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
 import { LanguageProvider } from './context/LanguageContext.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
+import ErrorBoundary from './components/ErrorBoundary.tsx';
 
 // Register the service worker for PWA capabilities
 if ('serviceWorker' in navigator) {
@@ -17,14 +18,16 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Router>
-      <LanguageProvider>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </LanguageProvider>
-    </Router>
-  </StrictMode>,
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <Router>
+        <LanguageProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </LanguageProvider>
+      </Router>
+    </ErrorBoundary>
+  </React.StrictMode>,
 );

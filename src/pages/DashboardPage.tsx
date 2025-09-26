@@ -1,33 +1,27 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { AdminDashboard } from '../components/AdminDashboard';
-import { TherapistDashboard } from '../components/TherapistDashboard';
+import { TherapistDashboard }from '../components/TherapistDashboard';
 import { PlaceDashboard } from '../components/PlaceDashboard';
 import { LoadingScreen } from '../components/LoadingScreen';
-import { AuthInfo } from '../types';
+import { Navigate } from 'react-router-dom';
 
 export const DashboardPage: React.FC = () => {
-  const { profile, role, signOut, loading } = useAuth();
+  const { role, loading } = useAuth();
 
   if (loading) {
     return <LoadingScreen />;
   }
 
-  const handleProfileUpdate = async () => {
-    // In a real app, you might want to force a profile refresh here.
-    // For now, we assume the dashboard components handle their state.
-    console.log("Profile update triggered.");
-  };
-
   switch (role) {
     case 'admin':
-      return <AdminDashboard onLogout={signOut} />;
+      return <AdminDashboard />;
     case 'therapist':
-      return <TherapistDashboard authInfo={profile as AuthInfo} onLogout={signOut} onProfileUpdate={handleProfileUpdate} />;
+      return <TherapistDashboard />;
     case 'place':
-      return <PlaceDashboard authInfo={profile as AuthInfo} onLogout={signOut} onProfileUpdate={handleProfileUpdate} />;
+      return <PlaceDashboard />;
     default:
-      // This should not happen if ProtectedRoute is working
-      return <div>Error: No valid role found.</div>;
+      // This should be caught by ProtectedRoute, but as a fallback:
+      return <Navigate to="/login" replace />;
   }
 };

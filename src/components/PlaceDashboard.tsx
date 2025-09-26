@@ -29,11 +29,7 @@ type ProfileForm = Omit<MassagePlaceProfile, 'id' | 'rating' | 'reviewCount' | '
 
 const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 
-interface PlaceDashboardProps {
-  onProfileUpdate: () => void;
-}
-
-export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ onProfileUpdate }) => {
+export const PlaceDashboard: React.FC = () => {
   const { profile: authProfile, signOut } = useAuth();
   const placeAuthProfile = authProfile as MassagePlaceProfile;
 
@@ -61,6 +57,7 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ onProfileUpdate 
 
       if (error || !data) {
         console.error('Error fetching place profile:', error);
+        signOut();
         navigate('/login');
         return;
       }
@@ -85,11 +82,12 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ onProfileUpdate 
       });
     } catch (error) {
       console.error('Unhandled error in fetchProfile (place):', error);
+      signOut();
       navigate('/login');
     } finally {
       setLoading(false);
     }
-  }, [placeAuthProfile?.id, reset, navigate]);
+  }, [placeAuthProfile?.id, reset, navigate, signOut]);
 
   useEffect(() => {
     fetchProfile();
@@ -272,11 +270,11 @@ export const PlaceDashboard: React.FC<PlaceDashboardProps> = ({ onProfileUpdate 
       .eq('id', placeProfile.id);
 
     if (!error) {
-      onProfileUpdate();
+      await fetchProfile();
       alert('Profile updated successfully!');
-      fetchProfile();
     } else {
       console.error("Error updating profile:", error);
+      alert(`Profile update failed: ${error.message}`);
     }
   };
   

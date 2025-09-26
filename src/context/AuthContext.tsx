@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const accountType = session.user.user_metadata.account_type;
         const tableName = accountType === 'therapist' ? 'therapists' : 'places';
         
-        const { data, error } = await supabase.from(tableName).select('*').eq('user_id', session.user.id).single();
+        const { data, error } = await supabase.from(tableName).select('*').eq('id', session.user.id).single();
         
         if (data) {
           const mappedProfile = accountType === 'therapist' ? mapSupabaseTherapistToProfile(data) : mapSupabasePlaceToProfile(data);

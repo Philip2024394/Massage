@@ -55,11 +55,17 @@ function App() {
         supabase.from('places').select('*').eq('status', 'active')
       ]);
 
-      if (therapistsRes.error) throw therapistsRes.error;
-      if (placesRes.error) throw placesRes.error;
+      if (therapistsRes.error) {
+        if (therapistsRes.error.message !== 'Failed to fetch') throw therapistsRes.error;
+      } else {
+        setTherapists(shuffleArray(therapistsRes.data.map(mapSupabaseTherapistToProfile)));
+      }
 
-      setTherapists(shuffleArray(therapistsRes.data.map(mapSupabaseTherapistToProfile)));
-      setPlaces(shuffleArray(placesRes.data.map(mapSupabasePlaceToProfile)));
+      if (placesRes.error) {
+        if (placesRes.error.message !== 'Failed to fetch') throw placesRes.error;
+      } else {
+        setPlaces(shuffleArray(placesRes.data.map(mapSupabasePlaceToProfile)));
+      }
 
     } catch (error) {
       console.error('Error fetching all data:', error);

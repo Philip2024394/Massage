@@ -17,13 +17,9 @@ const ToggleSwitch: React.FC<{ isOn: boolean; onToggle: (isOn: boolean) => void;
   </button>
 );
 
-interface AdminDashboardProps {
-  onLogout: () => void;
-}
-
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
+export const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
-  const { profile: authProfile } = useAuth();
+  const { profile: authProfile, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<'therapists' | 'places' | 'reviews' | 'codes'>('therapists');
   const [therapists, setTherapists] = useState<TherapistProfile[]>([]);
   const [places, setPlaces] = useState<MassagePlaceProfile[]>([]);
@@ -122,7 +118,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               <Link to="/home" title="View Home Page" className="p-2 text-gray-600 hover:text-primary-600 rounded-full hover:bg-gray-100 transition-colors">
                 <Home className="h-5 w-5" />
               </Link>
-              <button onClick={onLogout} className="p-2 text-gray-700 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors" title={t('header.logout')}>
+              <button onClick={signOut} className="p-2 text-gray-700 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors" title={t('header.logout')}>
                 <LogOut className="h-5 w-5" />
               </button>
             </div>
