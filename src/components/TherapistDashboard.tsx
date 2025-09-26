@@ -6,13 +6,13 @@ import { useForm, useWatch, Controller } from 'react-hook-form';
 import { TherapistProfile } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 import { Logo } from './Logo';
-import { CitySelector } from './CitySelector';
 import { TagInput } from './TagInput';
 import { massageTypeKeys, specialtyKeys, languageKeys } from '../data/services';
 import { supabase } from '../supabaseClient';
 import { mapSupabaseTherapistToProfile } from '../data/data-mappers';
 import { getWhatsAppUrl, getCurrentLocation } from '../utils/location';
 import { useAuth } from '../context/AuthContext';
+import { LocationSearchInput, PlaceDetails } from './LocationSearchInput';
 
 type ProfileForm = Omit<TherapistProfile, 'id' | 'rating' | 'reviewCount' | 'distance' | 'status' | 'location' | 'accountNumber' | 'login_code' | 'email'> & {
   address: string;
@@ -39,8 +39,10 @@ export const TherapistDashboard: React.FC = () => {
   const [isConfirmingLocation, setIsConfirmingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   
-  const { register, handleSubmit, reset, setValue, control } = useForm<ProfileForm>();
+  const { register, handleSubmit, reset, setValue, control, watch } = useForm<ProfileForm>();
   const phoneValue = useWatch({ control, name: 'phone' });
+  const addressValue = watch('address');
+  const cityValue = watch('city');
 
   const fetchProfile = useCallback(async () => {
     if (!therapistAuthProfile?.id) return;
@@ -86,39 +88,40 @@ export const TherapistDashboard: React.FC = () => {
     const file = event.target.files[0];
     setIsUploading(true);
 
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = async () => {
-      try {
-        const fileContent = reader.result as string;
-        const { data: uploadResult, error: functionError } = await supabase.functions.invoke('storage-manager', {
-          body: {
-            action: 'upload',
-            fileContent,
-            fileName: file.name,
-            contentType: file.type,
-            entityId: therapistProfile.id,
-            entityType: 'therapist'
-          }
-        });
+    const previewUrl = URL.createObjectURL(file);
+    setTherapistProfile(prev => prev ? { ...prev, profileImageUrl: previewUrl } : null);
 
-        if (functionError) throw functionError;
-        
-        const { publicUrl } = uploadResult;
+    try {
+      const filePath = `${therapistProfile.id}/${Date.now()}_${file.name}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(filePath, file);
 
-        const { error: updateError } = await supabase
-          .from('therapists')
-          .update({ profile_image_url: publicUrl })
-          .eq('id', therapistProfile.id);
+      if (uploadError) throw uploadError;
 
-        if (updateError) throw updateError;
-        await fetchProfile();
-      } catch (error) {
-        console.error("Error handling image upload:", error);
-      } finally {
-        setIsUploading(false);
-      }
-    };
+      const { data: urlData } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(filePath);
+
+      if (!urlData) throw new Error("Could not get public URL for the uploaded image.");
+
+      const { error: updateError } = await supabase
+        .from('therapists')
+        .update({ profile_image_url: urlData.publicUrl })
+        .eq('id', therapistProfile.id);
+
+      if (updateError) throw updateError;
+      
+      await fetchProfile();
+    } catch (error: any) {
+      console.error("Error handling image upload:", error);
+      alert(`Image upload failed: ${error.message}. Please ensure storage policies are set.`);
+      await fetchProfile(); // Re-fetch to revert to the old image
+    } finally {
+      setIsUploading(false);
+      URL.revokeObjectURL(previewUrl);
+    }
   };
 
   const handleToggleStatus = async () => {
@@ -146,21 +149,48 @@ export const TherapistDashboard: React.FC = () => {
     }
   };
 
+  const handlePlaceSelected = (place: PlaceDetails) => {
+    setValue('address', place.address, { shouldValidate: true });
+    setValue('city', place.city, { shouldValidate: true });
+    setValue('lat', place.lat, { shouldValidate: true });
+    setValue('lng', place.lng, { shouldValidate: true });
+  };
+
   const handleGetCurrentLocation = async () => {
     setIsConfirmingLocation(true);
     setLocationError(null);
     try {
       const position = await getCurrentLocation();
-      setValue('lat', Number(position.coords.latitude.toFixed(6)));
-      setValue('lng', Number(position.coords.longitude.toFixed(6)));
+      const { latitude, longitude } = position.coords;
+
+      const { data, error } = await supabase.functions.invoke('google-maps-proxy', {
+        body: { lat: latitude, lng: longitude },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      if (data.status === 'OK' && data.results[0]) {
+        const result = data.results[0];
+        const cityComponent = result.address_components.find((c: any) => c.types.includes('administrative_area_level_2') || c.types.includes('administrative_area_level_1'));
+        const city = cityComponent ? cityComponent.long_name.replace('Kota ', '').replace('Kabupaten ', '') : 'Unknown';
+        
+        handlePlaceSelected({ address: result.formatted_address, city, lat: latitude, lng: longitude });
+      } else {
+        throw new Error(data.error_message || 'Failed to reverse geocode.');
+      }
     } catch (err: any) {
       let errorMessage = t('locationModal.error');
-      if (err.code) {
-        switch (err.code) {
-          case 1: errorMessage = t('locationModal.errors.permissionDenied'); break;
-          case 2: errorMessage = t('locationModal.errors.positionUnavailable'); break;
-          case 3: errorMessage = t('locationModal.errors.timeout'); break;
+      if (err.code === 1) { // PERMISSION_DENIED
+        if (window.self !== window.top) {
+          errorMessage = "Location access denied. This is expected in the preview environment. Please use the manual address search instead.";
+        } else {
+          errorMessage = t('locationModal.errors.permissionDenied');
         }
+      } else if (err.code === 2) { // POSITION_UNAVAILABLE
+        errorMessage = t('locationModal.errors.positionUnavailable');
+      } else if (err.code === 3) { // TIMEOUT
+        errorMessage = t('locationModal.errors.timeout');
       }
       setLocationError(errorMessage);
     } finally {
@@ -279,9 +309,14 @@ export const TherapistDashboard: React.FC = () => {
               <div className="flex items-center space-x-6">
                 <div className="relative">
                   <img src={therapistProfile.profileImageUrl || 'https://via.placeholder.com/150'} alt="Profile" className="w-28 h-28 rounded-full object-cover shadow-md" />
+                  {isUploading && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                      <Loader className="h-8 w-8 text-white animate-spin" />
+                    </div>
+                  )}
                   <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
                   <button type="button" onClick={handleUploadClick} disabled={isUploading} className="absolute bottom-0 right-0 bg-primary-500 text-white p-2 rounded-full hover:bg-primary-600 shadow-sm disabled:bg-gray-400">
-                    {isUploading ? <Loader className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                    <Camera className="h-4 w-4" />
                   </button>
                 </div>
                 <div><h4 className="text-md font-semibold text-gray-900">{t('therapistDashboard.profilePhoto')}</h4><p className="text-sm text-gray-600">{t('therapistDashboard.updatePhoto')}</p></div>
@@ -289,12 +324,29 @@ export const TherapistDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.fullName')}</label><input type="text" {...register('name')} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.experience')}</label><input type="number" {...register('experience', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
-                <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('placeDashboard.address')}</label><input type="text" {...register('address')} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.city')}</label>
-                  <Controller name="city" control={control} render={({ field }) => <CitySelector {...field} />} />
+              </div>
+              
+              <div className="space-y-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="text-md font-semibold text-gray-800 flex items-center gap-2"><MapPin className="h-5 w-5 text-gray-500"/>{t('therapistDashboard.location')}</h4>
+                <p className="text-sm text-gray-600">{t('therapistDashboard.locationInfo')}</p>
+                <div className="space-y-3">
+                  <LocationSearchInput onPlaceSelected={handlePlaceSelected} />
+                  <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-4">
+                    <div className="flex-grow min-w-0">
+                      <p className="text-sm font-semibold text-gray-800">{t('therapistDashboard.currentAddress')}</p>
+                      <p className="text-sm text-gray-600 break-words">
+                        {addressValue ? `${addressValue}${cityValue ? `, ${cityValue}` : ''}` : t('therapistDashboard.noAddressSet')}
+                      </p>
+                    </div>
+                    <button type="button" onClick={handleGetCurrentLocation} disabled={isConfirmingLocation} className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-wait">
+                      {isConfirmingLocation ? <Loader className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                      <span>{isConfirmingLocation ? t('locationModal.gettingLocation') : t('therapistDashboard.getCurrentLocation')}</span>
+                    </button>
+                  </div>
+                  {locationError && <p className="text-red-500 text-xs">{locationError}</p>}
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.alsoServing')}</label>
                 <Controller name="serviceAreas" control={control} render={({ field }) => <TagInput {...field} placeholder="e.g., Kuta, Seminyak..." />} />
@@ -312,21 +364,7 @@ export const TherapistDashboard: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-md font-semibold text-gray-800 flex items-center gap-2"><MapPin className="h-5 w-5 text-gray-500"/>{t('placeDashboard.locationCoordinates')}</h4>
-                  <button type="button" onClick={handleGetCurrentLocation} disabled={isConfirmingLocation} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-wait">
-                    {isConfirmingLocation ? <Loader className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
-                    <span>{isConfirmingLocation ? t('locationModal.gettingLocation') : t('therapistDashboard.getCurrentLocation')}</span>
-                  </button>
-                </div>
-                <p className="text-sm text-gray-600 mb-3">{t('therapistDashboard.locationInfo')}</p>
-                {locationError && <p className="text-red-500 text-xs mb-3">{locationError}</p>}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.latitude')}</label><input type="number" step="any" {...register('lat', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
-                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.longitude')}</label><input type="number" step="any" {...register('lng', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
-                </div>
-              </div>
+              
               <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('therapistDashboard.bio')}</label><textarea {...register('bio')} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder={t('therapistDashboard.bioPlaceholder')} /></div>
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">{t('therapistDashboard.pricing')}</h4>

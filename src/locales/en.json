@@ -1,11 +1,13 @@
 {
   "landingPage": {
     "title": "Your Oasis of Relaxation, Delivered.",
-    "subtitle": "Find expert massage therapists for home service or discover serene massage places near you.",
+    "subtitle": "Your gateway to relaxation. Find expert massage therapists and serene spa places across Indonesia.",
     "cta": "Explore Services",
     "selectLanguage": "Please select your language",
     "english": "English",
-    "indonesian": "Bahasa Indonesia"
+    "indonesian": "Bahasa Indonesia",
+    "findTherapist": "Find a Therapist",
+    "findPlace": "Find a Place"
   },
   "header": {
     "brand": "2Go Massage",
@@ -24,7 +26,8 @@
     "selectMassageTypes": "Select Massage Types",
     "closeDropdown": "Done",
     "homeService": "Home Service",
-    "massagePlaces": "Massage Places"
+    "massagePlaces": "Massage Places",
+    "searchPlaceholder": "Search by name..."
   },
   "therapistCard": {
     "online": "Online",
@@ -89,7 +92,6 @@
     "experience": "Years of Experience",
     "phone": "WhatsApp Number",
     "testWhatsApp": "Test",
-    "city": "City",
     "bio": "Professional Bio",
     "bioPlaceholder": "Tell clients about your experience and approach to massage therapy...",
     "pricing": "Session Pricing",
@@ -102,7 +104,11 @@
     "submitLive": "Submit Live",
     "updateSuccess": "Profile updated successfully!",
     "getCurrentLocation": "Get Current Location",
-    "locationInfo": "Enter coordinates manually or click the button to get them from your device. This is required for distance calculations.",
+    "location": "Location",
+    "locationInfo": "Search for your address or use the button to set your location automatically. Your precise coordinates are required for distance calculations.",
+    "locationApiError": "Please configure the Google Maps API key in your .env file to enable location search.",
+    "currentAddress": "Current Address:",
+    "noAddressSet": "No address set. Please search for one.",
     "loading": "Loading Profile...",
     "premiumAccount": "Premium Account (Rp150.000/month)",
     "alsoServing": "Also Serving"
@@ -119,18 +125,16 @@
     "businessName": "Business Name",
     "phone": "Business WhatsApp",
     "testWhatsApp": "Test",
-    "address": "Address",
-    "city": "City",
-    "locationCoordinates": "Location Coordinates",
-    "latitude": "Latitude",
-    "longitude": "Longitude",
+    "location": "Location",
+    "currentAddress": "Current Address:",
+    "noAddressSet": "No address set. Please search for one.",
     "services": "Services Offered",
     "languages": "Languages Spoken",
     "updateProfile": "Update Profile",
     "submitLive": "Submit Live",
     "updateSuccess": "Profile updated successfully!",
     "getCurrentLocation": "Get Current Location",
-    "locationInfo": "Enter coordinates manually or click the button to get them from your device. This is required for distance calculations.",
+    "locationInfo": "Search for your address or use the button to set your location automatically. Your precise coordinates are required for distance calculations.",
     "openingHours": "Opening Hours",
     "loading": "Loading Profile...",
     "premiumAccount": "Premium Account (Rp150.000/month)",

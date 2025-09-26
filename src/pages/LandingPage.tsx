@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
 import { LanguageSelector } from '../components/LanguageSelector';
+import { User, Building } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
   const { t } = useTranslation();
@@ -36,15 +37,24 @@ export const LandingPage: React.FC = () => {
         </motion.div>
         
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+          className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md"
         >
           <Link 
-            to="/home"
-            className="mt-10 inline-block bg-primary-500 text-white font-bold py-4 px-12 rounded-full text-lg transition-all duration-300 ease-in-out hover:bg-primary-600 hover:scale-105 shadow-lg hover:shadow-xl"
+            to="/home?view=therapists"
+            className="w-full sm:w-auto flex-1 bg-primary-500 text-white font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 ease-in-out hover:bg-primary-600 hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
           >
-            {t('landingPage.cta')}
+            <User className="h-5 w-5" />
+            {t('landingPage.findTherapist')}
+          </Link>
+          <Link 
+            to="/home?view=places"
+            className="w-full sm:w-auto flex-1 bg-white/90 text-gray-800 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 ease-in-out hover:bg-white hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+          >
+            <Building className="h-5 w-5" />
+            {t('landingPage.findPlace')}
           </Link>
         </motion.div>
       </div>

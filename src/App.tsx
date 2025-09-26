@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { LandingPage } from './pages/LandingPage';
 import { HomePage } from './pages/HomePage';
@@ -34,6 +34,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 function App() {
   const { loading: authLoading } = useAuth();
+  const location = useLocation();
   const [isAppReady, setIsAppReady] = useState(false);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -45,6 +46,7 @@ function App() {
   const [filters, setFilters] = useState<FilterOptions>({
     serviceType: 'home', onlineOnly: false, massageTypes: [], maxDistance: 50, minRating: 0, priceRange: { min: 0, max: 500 }, city: ''
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchAllData = useCallback(async () => {
     setDataLoading(true);
@@ -76,6 +78,16 @@ function App() {
   useEffect(() => {
     fetchAllData();
   }, [fetchAllData]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const view = params.get('view');
+    if (view === 'therapists') {
+      setFilters(f => ({ ...f, serviceType: 'home' }));
+    } else if (view === 'places') {
+      setFilters(f => ({ ...f, serviceType: 'places' }));
+    }
+  }, [location.search]);
   
   useEffect(() => {
     if (!dataLoading && !authLoading) {
@@ -106,8 +118,9 @@ function App() {
       if (filters.massageTypes.length > 0 && !filters.massageTypes.some(type => therapist.massageTypes?.includes(type))) return false;
       if (therapist.distance && therapist.distance > filters.maxDistance) return false;
       if (therapist.rating < filters.minRating) return false;
+      if (searchQuery && !therapist.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
-    }), [therapistsWithDistance, filters]);
+    }), [therapistsWithDistance, filters, searchQuery]);
   
   const filteredPlaces = useMemo(() => placesWithDistance.filter(place => {
       if (filters.city && place.city !== filters.city) return false;
@@ -115,8 +128,9 @@ function App() {
       if (filters.massageTypes.length > 0 && !filters.massageTypes.some(type => place.services?.includes(type))) return false;
       if (place.distance && place.distance > filters.maxDistance) return false;
       if (place.rating < place.rating) return false;
+      if (searchQuery && !place.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
-  }), [placesWithDistance, filters]);
+  }), [placesWithDistance, filters, searchQuery]);
 
   const onlineCount = useMemo(() => therapists.filter(t => t.isOnline).length, [therapists]);
   const openPlacesCount = useMemo(() => places.filter(p => p.isOpen).length, [places]);
@@ -136,6 +150,8 @@ function App() {
                 filters={filters} onlineCount={onlineCount} totalCount={therapists.length}
                 openPlacesCount={openPlacesCount} totalPlacesCount={places.length}
                 onFiltersChange={setFilters}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
               />
             } />
             <Route path="/therapist-profiles/:code" element={<TherapistProfilePage />} />

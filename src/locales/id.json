@@ -1,11 +1,13 @@
 {
   "landingPage": {
     "title": "Oasis Relaksasi Anda, Diantarkan.",
-    "subtitle": "Temukan terapis pijat ahli untuk layanan di rumah atau temukan tempat pijat yang tenang di dekat Anda.",
+    "subtitle": "Gerbang Anda menuju relaksasi. Temukan terapis pijat ahli dan tempat spa yang tenang di seluruh Indonesia.",
     "cta": "Jelajahi Layanan",
     "selectLanguage": "Silakan pilih bahasa Anda",
     "english": "Inggris",
-    "indonesian": "Bahasa Indonesia"
+    "indonesian": "Bahasa Indonesia",
+    "findTherapist": "Cari Terapis",
+    "findPlace": "Cari Tempat"
   },
   "header": {
     "brand": "2Go Massage",
@@ -24,7 +26,8 @@
     "selectMassageTypes": "Pilih Jenis Pijat",
     "closeDropdown": "Selesai",
     "homeService": "Layanan Rumah",
-    "massagePlaces": "Tempat Pijat"
+    "massagePlaces": "Tempat Pijat",
+    "searchPlaceholder": "Cari berdasarkan nama..."
   },
   "therapistCard": {
     "online": "Online",
@@ -89,7 +92,6 @@
     "experience": "Pengalaman (Tahun)",
     "phone": "Nomor WhatsApp",
     "testWhatsApp": "Tes",
-    "city": "Kota",
     "bio": "Bio Profesional",
     "bioPlaceholder": "Ceritakan kepada klien tentang pengalaman dan pendekatan Anda terhadap terapi pijat...",
     "pricing": "Harga Sesi",
@@ -102,7 +104,11 @@
     "submitLive": "Kirim untuk Ditayangkan",
     "updateSuccess": "Profil berhasil diperbarui!",
     "getCurrentLocation": "Dapatkan Lokasi Saat Ini",
-    "locationInfo": "Masukkan koordinat secara manual atau klik tombol untuk mendapatkannya dari perangkat Anda. Ini diperlukan untuk perhitungan jarak.",
+    "location": "Lokasi",
+    "locationInfo": "Cari alamat Anda atau gunakan tombol untuk mengatur lokasi Anda secara otomatis. Koordinat persis Anda diperlukan untuk perhitungan jarak.",
+    "locationApiError": "Harap konfigurasikan kunci API Google Maps di file .env Anda untuk mengaktifkan pencarian lokasi.",
+    "currentAddress": "Alamat Saat Ini:",
+    "noAddressSet": "Tidak ada alamat yang diatur. Silakan cari.",
     "loading": "Memuat Profil...",
     "premiumAccount": "Akun Premium (Rp150.000/bulan)",
     "alsoServing": "Juga Melayani"
@@ -119,18 +125,16 @@
     "businessName": "Nama Bisnis",
     "phone": "WhatsApp Bisnis",
     "testWhatsApp": "Tes",
-    "address": "Alamat",
-    "city": "Kota",
-    "locationCoordinates": "Koordinat Lokasi",
-    "latitude": "Lintang",
-    "longitude": "Bujur",
+    "location": "Lokasi",
+    "currentAddress": "Alamat Saat Ini:",
+    "noAddressSet": "Tidak ada alamat yang diatur. Silakan cari.",
     "services": "Layanan yang Ditawarkan",
     "languages": "Bahasa yang Digunakan",
     "updateProfile": "Perbarui Profil",
     "submitLive": "Kirim untuk Ditayangkan",
     "updateSuccess": "Profil berhasil diperbarui!",
     "getCurrentLocation": "Dapatkan Lokasi Saat Ini",
-    "locationInfo": "Masukkan koordinat secara manual atau klik tombol untuk mendapatkannya dari perangkat Anda. Ini diperlukan untuk perhitungan jarak.",
+    "locationInfo": "Cari alamat Anda atau gunakan tombol untuk mengatur lokasi Anda secara otomatis. Koordinat persis Anda diperlukan untuk perhitungan jarak.",
     "openingHours": "Jam Buka",
     "loading": "Memuat Profil...",
     "premiumAccount": "Akun Premium (Rp150.000/bulan)",

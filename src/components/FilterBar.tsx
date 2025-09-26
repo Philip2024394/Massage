@@ -12,6 +12,8 @@ interface FilterBarProps {
   totalCount: number;
   openPlacesCount: number;
   totalPlacesCount: number;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({ 
@@ -20,7 +22,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onlineCount, 
   totalCount,
   openPlacesCount,
-  totalPlacesCount
+  totalPlacesCount,
+  searchQuery,
+  onSearchQueryChange
 }) => {
   const { t } = useTranslation();
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
@@ -82,92 +86,104 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="relative" ref={cityDropdownRef}>
-            <button
-              onClick={() => setShowCityDropdown(!showCityDropdown)}
-              className="flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap bg-gray-100 text-gray-700 hover:bg-gray-200"
-            >
-              <Map className="h-4 w-4 text-gray-600" />
-              <span>{filters.city || 'All Cities'}</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${showCityDropdown ? 'rotate-180' : ''}`} />
-            </button>
-            {showCityDropdown && (
-              <div className="absolute top-full mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
-                <div className="p-2 border-b border-gray-200">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search city..."
-                      value={citySearch}
-                      onChange={(e) => setCitySearch(e.target.value)}
-                      className="w-full pl-9 pr-3 py-1.5 border-0 focus:ring-0 text-sm"
-                      autoFocus
-                    />
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="relative" ref={cityDropdownRef}>
+              <button
+                onClick={() => setShowCityDropdown(!showCityDropdown)}
+                className="flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap bg-gray-100 text-gray-700 hover:bg-gray-200"
+              >
+                <Map className="h-4 w-4 text-gray-600" />
+                <span>{filters.city || 'All Cities'}</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showCityDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              {showCityDropdown && (
+                <div className="absolute top-full mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                  <div className="p-2 border-b border-gray-200">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search city..."
+                        value={citySearch}
+                        onChange={(e) => setCitySearch(e.target.value)}
+                        className="w-full pl-9 pr-3 py-1.5 border-0 focus:ring-0 text-sm"
+                        autoFocus
+                      />
+                    </div>
                   </div>
-                </div>
-                <ul className="max-h-72 overflow-y-auto">
-                  {citiesToShow.map((city) => (
-                    <li key={city}>
-                      <button
-                        onClick={() => handleCityChange(city === 'All Cities' ? '' : city)}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        {city}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-          <div className="relative" ref={typeDropdownRef}>
-            <button
-              onClick={() => setShowTypeDropdown(!showTypeDropdown)}
-              className="flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap bg-gray-100 text-gray-700 hover:bg-gray-200"
-            >
-              <span>
-                {filters.massageTypes.length > 0
-                  ? t('filterBar.typesSelected', { count: filters.massageTypes.length })
-                  : t('filterBar.massageType')}
-              </span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${showTypeDropdown ? 'rotate-180' : ''}`} />
-            </button>
-            {showTypeDropdown && (
-              <div className="absolute top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
-                <div className="p-4">
-                  <h4 className="text-sm font-semibold mb-3 text-gray-800">{t('filterBar.selectMassageTypes')}</h4>
-                  <div className="space-y-2 max-h-72 overflow-y-auto pr-2">
-                    {serviceKeysToDisplay.map((key) => (
-                      <label key={key} className="flex items-center space-x-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={filters.massageTypes.includes(key)}
-                          onChange={() => handleTypeToggle(key)}
-                          className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                        />
-                        <span className="text-sm text-gray-700">{t(key)}</span>
-                      </label>
+                  <ul className="max-h-72 overflow-y-auto">
+                    {citiesToShow.map((city) => (
+                      <li key={city}>
+                        <button
+                          onClick={() => handleCityChange(city === 'All Cities' ? '' : city)}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          {city}
+                        </button>
+                      </li>
                     ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <div className="relative" ref={typeDropdownRef}>
+              <button
+                onClick={() => setShowTypeDropdown(!showTypeDropdown)}
+                className="flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap bg-gray-100 text-gray-700 hover:bg-gray-200"
+              >
+                <span>
+                  {filters.massageTypes.length > 0
+                    ? t('filterBar.typesSelected', { count: filters.massageTypes.length })
+                    : t('filterBar.massageType')}
+                </span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showTypeDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              {showTypeDropdown && (
+                <div className="absolute top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                  <div className="p-4">
+                    <h4 className="text-sm font-semibold mb-3 text-gray-800">{t('filterBar.selectMassageTypes')}</h4>
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-2">
+                      {serviceKeysToDisplay.map((key) => (
+                        <label key={key} className="flex items-center space-x-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={filters.massageTypes.includes(key)}
+                            onChange={() => handleTypeToggle(key)}
+                            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                          />
+                          <span className="text-sm text-gray-700">{t(key)}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-2 p-3 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+                      <button 
+                          onClick={() => onFiltersChange({...filters, massageTypes: []})}
+                          className="text-sm text-primary-600 hover:underline"
+                      >
+                          {t('filterBar.clearSelection')}
+                      </button>
+                      <button
+                          onClick={() => setShowTypeDropdown(false)}
+                          className="flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium bg-primary-500 text-white hover:bg-primary-600"
+                      >
+                        <span>{t('filterBar.closeDropdown')}</span>
+                      </button>
                   </div>
                 </div>
-                <div className="mt-2 p-3 border-t border-gray-200 flex items-center justify-between bg-gray-50">
-                    <button 
-                        onClick={() => onFiltersChange({...filters, massageTypes: []})}
-                        className="text-sm text-primary-600 hover:underline"
-                    >
-                        {t('filterBar.clearSelection')}
-                    </button>
-                    <button
-                        onClick={() => setShowTypeDropdown(false)}
-                        className="flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium bg-primary-500 text-white hover:bg-primary-600"
-                    >
-                      <span>{t('filterBar.closeDropdown')}</span>
-                    </button>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
+          </div>
+          <div className="relative flex-grow w-full md:w-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearchQueryChange(e.target.value)}
+              placeholder={t('filterBar.searchPlaceholder')}
+              className="w-full pl-12 pr-4 py-2 border border-gray-200 bg-gray-100 rounded-full focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+            />
           </div>
         </div>
       </div>

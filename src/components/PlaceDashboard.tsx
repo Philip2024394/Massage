@@ -6,7 +6,6 @@ import { useForm, useWatch, Controller } from 'react-hook-form';
 import { MassagePlaceProfile, OpeningHours } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 import { Logo } from './Logo';
-import { CitySelector } from './CitySelector';
 import { TagInput } from './TagInput';
 import { placeServiceKeys, languageKeys } from '../data/services';
 import { supabase } from '../supabaseClient';
@@ -14,6 +13,7 @@ import { mapSupabasePlaceToProfile } from '../data/data-mappers';
 import { getWhatsAppUrl, getCurrentLocation } from '../utils/location';
 import { generateTimeOptions } from '../utils/time';
 import { useAuth } from '../context/AuthContext';
+import { LocationSearchInput, PlaceDetails } from './LocationSearchInput';
 
 type ProfileForm = Omit<MassagePlaceProfile, 'id' | 'rating' | 'reviewCount' | 'distance' | 'status' | 'location' | 'accountNumber' | 'login_code' | 'pricing' | 'isOpen' | 'email'> & {
   city: string;
@@ -42,9 +42,12 @@ export const PlaceDashboard: React.FC = () => {
   const [isConfirmingLocation, setIsConfirmingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGalleryUploading, setIsGalleryUploading] = useState(false);
   
-  const { register, handleSubmit, reset, setValue, control } = useForm<ProfileForm>();
+  const { register, handleSubmit, reset, setValue, control, watch } = useForm<ProfileForm>();
   const phoneValue = useWatch({ control, name: 'phone' });
+  const addressValue = watch('address');
+  const cityValue = watch('city');
 
   const timeOptions = generateTimeOptions();
 
@@ -97,39 +100,40 @@ export const PlaceDashboard: React.FC = () => {
     const file = event.target.files[0];
     setIsUploading(true);
 
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = async () => {
-       try {
-        const fileContent = reader.result as string;
-        const { data: uploadResult, error: functionError } = await supabase.functions.invoke('storage-manager', {
-          body: {
-            action: 'upload',
-            fileContent,
-            fileName: file.name,
-            contentType: file.type,
-            entityId: placeProfile.id,
-            entityType: 'place'
-          }
-        });
+    const previewUrl = URL.createObjectURL(file);
+    setPlaceProfile(prev => prev ? { ...prev, profileImageUrl: previewUrl } : null);
 
-        if (functionError) throw functionError;
-        
-        const { publicUrl } = uploadResult;
+    try {
+      const filePath = `${placeProfile.id}/${Date.now()}_${file.name}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(filePath, file);
 
-        const { error: updateError } = await supabase
-          .from('places')
-          .update({ profile_image_url: publicUrl })
-          .eq('id', placeProfile.id);
+      if (uploadError) throw uploadError;
 
-        if (updateError) throw updateError;
-        await fetchProfile();
-      } catch (error) {
-        console.error("Error handling profile image upload:", error);
-      } finally {
-        setIsUploading(false);
-      }
-    };
+      const { data: urlData } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(filePath);
+
+      if (!urlData) throw new Error("Could not get public URL for the uploaded image.");
+
+      const { error: updateError } = await supabase
+        .from('places')
+        .update({ profile_image_url: urlData.publicUrl })
+        .eq('id', placeProfile.id);
+
+      if (updateError) throw updateError;
+      
+      await fetchProfile();
+    } catch (error: any) {
+      console.error("Error handling profile image upload:", error);
+      alert(`Image upload failed: ${error.message}.`);
+      await fetchProfile();
+    } finally {
+      setIsUploading(false);
+      URL.revokeObjectURL(previewUrl);
+    }
   };
 
   const handleGalleryImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,61 +148,50 @@ export const PlaceDashboard: React.FC = () => {
         return;
     }
     
-    setIsUploading(true);
-    const newUrls: string[] = [];
+    setIsGalleryUploading(true);
 
-    for (const file of files) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      await new Promise<void>((resolve) => {
-        reader.onloadend = async () => {
-          try {
-            const fileContent = reader.result as string;
-            const { data: uploadResult, error: functionError } = await supabase.functions.invoke('storage-manager', {
-              body: {
-                action: 'upload',
-                fileContent,
-                fileName: file.name,
-                contentType: file.type,
-                entityId: placeProfile.id,
-                entityType: 'place'
-              }
-            });
-            if (functionError) throw functionError;
-            newUrls.push(uploadResult.publicUrl);
-          } catch (error) {
-            console.error('Error uploading gallery image:', error);
-          } finally {
-            resolve();
-          }
-        };
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const filePath = `${placeProfile.id}/gallery/${Date.now()}_${file.name}`;
+        const { error } = await supabase.storage.from('profile-images').upload(filePath, file);
+        if (error) throw error;
+        const { data } = supabase.storage.from('profile-images').getPublicUrl(filePath);
+        return data.publicUrl;
       });
-    }
 
-    if (newUrls.length > 0) {
-      const allUrls = [...existingUrls, ...newUrls];
-      const { error: updateError } = await supabase
+      const newUrls = await Promise.all(uploadPromises);
+      const updatedUrls = [...existingUrls, ...newUrls];
+
+      const { error: dbError } = await supabase
         .from('places')
-        .update({ gallery_image_urls: allUrls })
+        .update({ gallery_image_urls: updatedUrls })
         .eq('id', placeProfile.id);
-        
-      if (!updateError) await fetchProfile();
-      else console.error("Error updating gallery URLs:", updateError);
+
+      if (dbError) throw dbError;
+
+      await fetchProfile();
+    } catch (error: any) {
+      console.error('Error uploading gallery images:', error);
+      alert(`Gallery upload failed: ${error.message}.`);
+      await fetchProfile();
+    } finally {
+      setIsGalleryUploading(false);
     }
-    
-    setIsUploading(false);
   };
 
   const handleGalleryImageDelete = async (urlToDelete: string) => {
       if (!placeProfile) return;
       
-      const { error: deleteError } = await supabase.functions.invoke('storage-manager', {
-        body: { action: 'delete', fileUrl: urlToDelete }
-      });
+      const fileName = urlToDelete.split('/').pop();
+      if (!fileName) return;
+      
+      const filePath = `${placeProfile.id}/gallery/${fileName}`;
+
+      const { error: deleteError } = await supabase.storage.from('profile-images').remove([filePath]);
 
       if (deleteError) {
         console.error("Error deleting file from storage:", deleteError);
-        return;
+        // Try to proceed with DB update even if storage delete fails
       }
 
       const updatedUrls = placeProfile.galleryImageUrls.filter(url => url !== urlToDelete);
@@ -219,21 +212,48 @@ export const PlaceDashboard: React.FC = () => {
     }
   };
 
+  const handlePlaceSelected = (place: PlaceDetails) => {
+    setValue('address', place.address, { shouldValidate: true });
+    setValue('city', place.city, { shouldValidate: true });
+    setValue('lat', place.lat, { shouldValidate: true });
+    setValue('lng', place.lng, { shouldValidate: true });
+  };
+
   const handleGetCurrentLocation = async () => {
     setIsConfirmingLocation(true);
     setLocationError(null);
     try {
       const position = await getCurrentLocation();
-      setValue('lat', Number(position.coords.latitude.toFixed(6)));
-      setValue('lng', Number(position.coords.longitude.toFixed(6)));
+      const { latitude, longitude } = position.coords;
+
+      const { data, error } = await supabase.functions.invoke('google-maps-proxy', {
+        body: { lat: latitude, lng: longitude },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      if (data.status === 'OK' && data.results[0]) {
+        const result = data.results[0];
+        const cityComponent = result.address_components.find((c: any) => c.types.includes('administrative_area_level_2') || c.types.includes('administrative_area_level_1'));
+        const city = cityComponent ? cityComponent.long_name.replace('Kota ', '').replace('Kabupaten ', '') : 'Unknown';
+        
+        handlePlaceSelected({ address: result.formatted_address, city, lat: latitude, lng: longitude });
+      } else {
+        throw new Error(data.error_message || 'Failed to reverse geocode.');
+      }
     } catch (err: any) {
       let errorMessage = t('locationModal.error');
-      if (err.code) {
-        switch (err.code) {
-          case 1: errorMessage = t('locationModal.errors.permissionDenied'); break;
-          case 2: errorMessage = t('locationModal.errors.positionUnavailable'); break;
-          case 3: errorMessage = t('locationModal.errors.timeout'); break;
+      if (err.code === 1) { // PERMISSION_DENIED
+        if (window.self !== window.top) {
+          errorMessage = "Location access denied. This is expected in the preview environment. Please use the manual address search instead.";
+        } else {
+          errorMessage = t('locationModal.errors.permissionDenied');
         }
+      } else if (err.code === 2) { // POSITION_UNAVAILABLE
+        errorMessage = t('locationModal.errors.positionUnavailable');
+      } else if (err.code === 3) { // TIMEOUT
+        errorMessage = t('locationModal.errors.timeout');
       }
       setLocationError(errorMessage);
     } finally {
@@ -343,9 +363,14 @@ export const PlaceDashboard: React.FC = () => {
               <div className="flex items-center space-x-6">
                 <div className="relative">
                   <img src={placeProfile.profileImageUrl || 'https://via.placeholder.com/150'} alt="Profile" className="w-28 h-28 rounded-full object-cover shadow-md" />
+                  {isUploading && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                      <Loader className="h-8 w-8 text-white animate-spin" />
+                    </div>
+                  )}
                   <input type="file" ref={profileFileInputRef} onChange={handleProfileImageUpload} accept="image/*" className="hidden" />
                   <button type="button" onClick={() => profileFileInputRef.current?.click()} disabled={isUploading} className="absolute bottom-0 right-0 bg-primary-500 text-white p-2 rounded-full hover:bg-primary-600 shadow-sm disabled:bg-gray-400" title={t('placeDashboard.uploadPhotoTitle')}>
-                    {isUploading ? <Loader className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                    <Camera className="h-4 w-4" />
                   </button>
                 </div>
                 <div><h4 className="text-md font-semibold text-gray-900">{t('placeDashboard.profilePhoto')}</h4><p className="text-sm text-gray-600">{t('placeDashboard.updatePhoto')}</p></div>
@@ -369,7 +394,7 @@ export const PlaceDashboard: React.FC = () => {
                   </div>
                   <input type="file" multiple ref={galleryFileInputRef} onChange={handleGalleryImageUpload} accept="image/*" className="hidden" />
                 </label>
-                {isUploading && <p className="text-sm text-gray-500 mt-2 flex items-center gap-2"><Loader className="h-4 w-4 animate-spin" /> {t('placeDashboard.uploadingImages')}</p>}
+                {isGalleryUploading && <p className="text-sm text-gray-500 mt-2 flex items-center gap-2"><Loader className="h-4 w-4 animate-spin" /> {t('placeDashboard.uploadingImages')}</p>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -388,34 +413,34 @@ export const PlaceDashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-2">{t('placeDashboard.address')}</label><input type="text" {...register('address')} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('placeDashboard.city')}</label>
-                  <Controller name="city" control={control} render={({ field }) => <CitySelector {...field} />} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('placeDashboard.alsoServing')}</label>
-                  <Controller name="serviceAreas" control={control} render={({ field }) => <TagInput {...field} placeholder="e.g., Kuta, Seminyak..." />} />
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-md font-semibold text-gray-800 flex items-center gap-2"><MapPin className="h-5 w-5 text-gray-500"/>{t('placeDashboard.locationCoordinates')}</h4>
-                  <button type="button" onClick={handleGetCurrentLocation} disabled={isConfirmingLocation} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-wait">
-                    {isConfirmingLocation ? <Loader className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
-                    <span>{isConfirmingLocation ? t('locationModal.gettingLocation') : t('placeDashboard.getCurrentLocation')}</span>
-                  </button>
-                </div>
-                <p className="text-sm text-gray-600 mb-3">{t('placeDashboard.locationInfo')}</p>
-                {locationError && <p className="text-red-500 text-xs mb-3">{locationError}</p>}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.latitude')}</label><input type="number" step="any" {...register('lat', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
-                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.longitude')}</label><input type="number" step="any" {...register('lng', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
+
+              <div className="space-y-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="text-md font-semibold text-gray-800 flex items-center gap-2"><MapPin className="h-5 w-5 text-gray-500"/>{t('placeDashboard.location')}</h4>
+                <p className="text-sm text-gray-600">{t('placeDashboard.locationInfo')}</p>
+                
+                <div className="space-y-3">
+                  <LocationSearchInput onPlaceSelected={handlePlaceSelected} />
+                  <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-4">
+                    <div className="flex-grow min-w-0">
+                      <p className="text-sm font-semibold text-gray-800">{t('placeDashboard.currentAddress')}</p>
+                      <p className="text-sm text-gray-600 break-words">
+                        {addressValue ? `${addressValue}${cityValue ? `, ${cityValue}` : ''}` : t('placeDashboard.noAddressSet')}
+                      </p>
+                    </div>
+                    <button type="button" onClick={handleGetCurrentLocation} disabled={isConfirmingLocation} className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-wait">
+                      {isConfirmingLocation ? <Loader className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                      <span>{isConfirmingLocation ? t('locationModal.gettingLocation') : t('placeDashboard.getCurrentLocation')}</span>
+                    </button>
+                  </div>
+                  {locationError && <p className="text-red-500 text-xs">{locationError}</p>}
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('placeDashboard.alsoServing')}</label>
+                <Controller name="serviceAreas" control={control} render={({ field }) => <TagInput {...field} placeholder="e.g., Kuta, Seminyak..." />} />
+              </div>
+              
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2"><Clock className="h-5 w-5 text-gray-500" />{t('placeDashboard.openingHours')}</h4>
                 <div className="space-y-3">

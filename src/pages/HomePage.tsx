@@ -17,6 +17,8 @@ interface HomePageProps {
   openPlacesCount: number;
   totalPlacesCount: number;
   onFiltersChange: (filters: FilterOptions) => void;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
@@ -28,6 +30,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   openPlacesCount,
   totalPlacesCount,
   onFiltersChange,
+  searchQuery,
+  onSearchQueryChange,
 }) => {
   const { t } = useTranslation();
 
@@ -46,6 +50,8 @@ export const HomePage: React.FC<HomePageProps> = ({
         totalCount={totalCount}
         openPlacesCount={openPlacesCount}
         totalPlacesCount={totalPlacesCount}
+        searchQuery={searchQuery}
+        onSearchQueryChange={onSearchQueryChange}
       />
       
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
