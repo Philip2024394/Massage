@@ -104,9 +104,6 @@
     "getCurrentLocation": "Dapatkan Lokasi Saat Ini",
     "locationInfo": "Masukkan koordinat secara manual atau klik tombol untuk mendapatkannya dari perangkat Anda. Ini diperlukan untuk perhitungan jarak.",
     "loading": "Memuat Profil...",
-    "loginCode": "Kode Anda: ",
-    "copyCode": "Salin Kode",
-    "codeCopied": "Kode login disalin ke clipboard!",
     "premiumAccount": "Akun Premium (Rp150.000/bulan)",
     "alsoServing": "Juga Melayani"
   },
@@ -136,13 +133,15 @@
     "locationInfo": "Masukkan koordinat secara manual atau klik tombol untuk mendapatkannya dari perangkat Anda. Ini diperlukan untuk perhitungan jarak.",
     "openingHours": "Jam Buka",
     "loading": "Memuat Profil...",
-    "loginCode": "Kode Login: ",
-    "copyCode": "Salin Kode",
-    "codeCopied": "Kode login disalin ke clipboard!",
     "premiumAccount": "Akun Premium (Rp150.000/bulan)",
     "alsoServing": "Juga Melayani",
     "uploadingImages": "Mengunggah gambar...",
     "uploadLimit": "Anda hanya dapat mengunggah {{count}} gambar lagi."
+  },
+  "dashboard": {
+    "publicProfileLink": "Tautan Profil Publik",
+    "copyLink": "Salin Tautan",
+    "linkCopied": "Tautan profil disalin ke clipboard!"
   },
   "adminDashboard": {
     "title": "Panel Admin",

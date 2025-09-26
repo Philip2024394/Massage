@@ -104,9 +104,6 @@
     "getCurrentLocation": "Get Current Location",
     "locationInfo": "Enter coordinates manually or click the button to get them from your device. This is required for distance calculations.",
     "loading": "Loading Profile...",
-    "loginCode": "Your Code: ",
-    "copyCode": "Copy Code",
-    "codeCopied": "Login code copied to clipboard!",
     "premiumAccount": "Premium Account (Rp150.000/month)",
     "alsoServing": "Also Serving"
   },
@@ -136,13 +133,15 @@
     "locationInfo": "Enter coordinates manually or click the button to get them from your device. This is required for distance calculations.",
     "openingHours": "Opening Hours",
     "loading": "Loading Profile...",
-    "loginCode": "Login Code: ",
-    "copyCode": "Copy Code",
-    "codeCopied": "Login code copied to clipboard!",
     "premiumAccount": "Premium Account (Rp150.000/month)",
     "alsoServing": "Also Serving",
     "uploadingImages": "Uploading images...",
     "uploadLimit": "You can only upload {{count}} more images."
+  },
+  "dashboard": {
+    "publicProfileLink": "Public Profile Link",
+    "copyLink": "Copy Link",
+    "linkCopied": "Profile link copied to clipboard!"
   },
   "adminDashboard": {
     "title": "Admin Panel",

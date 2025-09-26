@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { User, LogOut, Camera, Badge, Home, MessageCircle, Check, MapPin, Loader, Globe, Key, Copy, Star } from 'lucide-react';
+import { User, LogOut, Camera, Home, MessageCircle, Check, MapPin, Loader, Globe, Copy, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm, useWatch, Controller } from 'react-hook-form';
@@ -168,10 +168,12 @@ export const TherapistDashboard: React.FC = () => {
     }
   };
 
-  const copyCodeToClipboard = () => {
+  const copyProfileLinkToClipboard = () => {
     if (therapistProfile?.login_code) {
-      navigator.clipboard.writeText(therapistProfile.login_code);
-      alert(t('therapistDashboard.codeCopied'));
+      const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+      const link = `${siteUrl}/therapist-profiles/${therapistProfile.login_code}`;
+      navigator.clipboard.writeText(link);
+      alert(t('dashboard.linkCopied'));
     }
   };
 
@@ -262,17 +264,11 @@ export const TherapistDashboard: React.FC = () => {
                     <span>{t('therapistDashboard.premiumAccount')}</span>
                   </div>
                 )}
-                {therapistProfile.accountNumber && (
-                  <div className="flex items-center gap-2 bg-gray-100 text-gray-600 text-sm font-medium px-3 py-1.5 rounded-lg">
-                    <Badge className="h-4 w-4" />
-                    <span>{therapistProfile.accountNumber}</span>
-                  </div>
-                )}
                 {therapistProfile.login_code && (
                   <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium px-3 py-1.5 rounded-lg">
-                    <Key className="h-4 w-4" />
-                    <span>{t('therapistDashboard.loginCode')}<strong>{therapistProfile.login_code}</strong></span>
-                    <button type="button" onClick={copyCodeToClipboard} title={t('therapistDashboard.copyCode')} className="ml-2 hover:text-blue-900">
+                    <Globe className="h-4 w-4" />
+                    <span className="font-semibold">{t('dashboard.publicProfileLink')}</span>
+                    <button type="button" onClick={copyProfileLinkToClipboard} title={t('dashboard.copyLink')} className="ml-2 hover:text-blue-900">
                       <Copy className="h-4 w-4" />
                     </button>
                   </div>

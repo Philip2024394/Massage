@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Building, LogOut, Camera, Badge, Home, MessageCircle, Check, MapPin, Loader, Clock, Trash2, Upload, Globe, Key, Copy, Star } from 'lucide-react';
+import { Building, LogOut, Camera, Home, MessageCircle, Check, MapPin, Loader, Clock, Trash2, Upload, Globe, Copy, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm, useWatch, Controller } from 'react-hook-form';
@@ -241,10 +241,12 @@ export const PlaceDashboard: React.FC = () => {
     }
   };
 
-  const copyCodeToClipboard = () => {
+  const copyProfileLinkToClipboard = () => {
     if (placeProfile?.login_code) {
-      navigator.clipboard.writeText(placeProfile.login_code);
-      alert(t('placeDashboard.codeCopied'));
+      const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+      const link = `${siteUrl}/place-profiles/${placeProfile.login_code}`;
+      navigator.clipboard.writeText(link);
+      alert(t('dashboard.linkCopied'));
     }
   };
 
@@ -326,17 +328,11 @@ export const PlaceDashboard: React.FC = () => {
                     <span>{t('placeDashboard.premiumAccount')}</span>
                   </div>
                 )}
-                {placeProfile.accountNumber && (
-                  <div className="flex items-center gap-2 bg-gray-100 text-gray-600 text-sm font-medium px-3 py-1.5 rounded-lg">
-                    <Badge className="h-4 w-4" />
-                    <span>{placeProfile.accountNumber}</span>
-                  </div>
-                )}
                 {placeProfile.login_code && (
                   <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium px-3 py-1.5 rounded-lg">
-                    <Key className="h-4 w-4" />
-                    <span>{t('placeDashboard.loginCode')}<strong>{placeProfile.login_code}</strong></span>
-                    <button type="button" onClick={copyCodeToClipboard} title={t('placeDashboard.copyCode')} className="ml-2 hover:text-blue-900">
+                    <Globe className="h-4 w-4" />
+                    <span className="font-semibold">{t('dashboard.publicProfileLink')}</span>
+                    <button type="button" onClick={copyProfileLinkToClipboard} title={t('dashboard.copyLink')} className="ml-2 hover:text-blue-900">
                       <Copy className="h-4 w-4" />
                     </button>
                   </div>
