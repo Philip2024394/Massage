@@ -16,6 +16,7 @@ const ToggleSwitch: React.FC<{ isOn: boolean; onToggle: (isOn: boolean) => void;
 );
 
 const SubscriptionControl: React.FC<{ entity: TherapistProfile | MassagePlaceProfile; onUpdate: () => void; }> = ({ entity, onUpdate }) => {
+  const { t } = useTranslation();
   const [isLive, setIsLive] = useState(entity.status === 'active');
   const [isContinuous, setIsContinuous] = useState(entity.is_continuous);
   const [loading, setLoading] = useState(false);
@@ -33,7 +34,7 @@ const SubscriptionControl: React.FC<{ entity: TherapistProfile | MassagePlacePro
 
     if (error) {
       console.error(`Subscription update failed:`, error);
-      alert(`Failed to update subscription: ${error.message}`);
+      alert(t('adminDashboard.subscriptionUpdateFailed', { message: error.message }));
       // Revert UI state on failure
       setIsLive(entity.status === 'active');
       setIsContinuous(entity.is_continuous);
@@ -60,7 +61,7 @@ const SubscriptionControl: React.FC<{ entity: TherapistProfile | MassagePlacePro
     <div className="flex items-center space-x-4">
       <div className="flex items-center space-x-2">
         <ToggleSwitch isOn={isLive} onToggle={handleToggleLive} disabled={loading} />
-        <span className="text-sm font-medium text-gray-700">Live</span>
+        <span className="text-sm font-medium text-gray-700">{t('adminDashboard.live')}</span>
       </div>
       <div className="flex items-center space-x-2">
         <input 
@@ -71,7 +72,7 @@ const SubscriptionControl: React.FC<{ entity: TherapistProfile | MassagePlacePro
           disabled={loading}
           className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
         />
-        <label htmlFor={`continuous-${entity.id}`} className="text-sm text-gray-600">Remain Live</label>
+        <label htmlFor={`continuous-${entity.id}`} className="text-sm text-gray-600">{t('adminDashboard.remainLive')}</label>
       </div>
     </div>
   );
@@ -118,7 +119,7 @@ export const AdminDashboard: React.FC = () => {
     if (!error) fetchData();
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Admin Panel...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center">{t('adminDashboard.loading')}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">

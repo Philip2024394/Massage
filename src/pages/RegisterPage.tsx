@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/Logo';
 import { User, Building, Loader, Eye, EyeOff, CheckCircle, Home } from 'lucide-react';
+import { useTranslation } from '../hooks/useTranslation';
 
 export const RegisterPage: React.FC = () => {
+  const { t } = useTranslation();
   const { register, handleSubmit, watch, formState: { errors } } = useForm();
   const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -41,10 +43,10 @@ export const RegisterPage: React.FC = () => {
         <div className="max-w-md w-full text-center">
           <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
             <CheckCircle className="h-16 w-16 text-primary-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Registration Successful!</h2>
-            <p className="text-gray-600 mb-6">Please check your email to verify your account. After verification, you can sign in.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('registrationSuccess.title')}</h2>
+            <p className="text-gray-600 mb-6">{t('registrationSuccess.message')}</p>
             <Link to="/login" className="w-full inline-block bg-primary-500 text-white py-3 px-4 rounded-lg hover:bg-primary-600 font-medium">
-              Back to Sign In
+              {t('registrationSuccess.backToSignIn')}
             </Link>
           </div>
         </div>
@@ -71,61 +73,61 @@ export const RegisterPage: React.FC = () => {
         <div className="max-w-md w-full">
           <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
             <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">
-              Create an Account
+              {t('registerPage.title')}
             </h2>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {authError && <p className="text-red-500 text-sm text-center bg-red-50 p-3 rounded-lg">{authError}</p>}
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('registerPage.accountTypeLabel')}</label>
                 <div className="flex items-center bg-gray-100 rounded-full p-1">
                   <button type="button" onClick={() => setAccountType('therapist')} className={`w-1/2 flex items-center justify-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${accountType === 'therapist' ? 'bg-primary-500 text-white shadow' : 'text-gray-600 hover:bg-gray-200'}`}>
-                    <User className="h-4 w-4" /> Therapist
+                    <User className="h-4 w-4" /> {t('registerPage.therapist')}
                   </button>
                   <button type="button" onClick={() => setAccountType('place')} className={`w-1/2 flex items-center justify-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${accountType === 'place' ? 'bg-primary-500 text-white shadow' : 'text-gray-600 hover:bg-gray-200'}`}>
-                    <Building className="h-4 w-4" /> Massage Place
+                    <Building className="h-4 w-4" /> {t('registerPage.place')}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{accountType === 'therapist' ? 'Your Full Name' : 'Business Name'}</label>
-                <input type="text" {...register('name', { required: 'Name is required' })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">{accountType === 'therapist' ? t('registerPage.nameLabelTherapist') : t('registerPage.nameLabelPlace')}</label>
+                <input type="text" {...register('name', { required: t('registerPage.nameRequired') })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message as string}</p>}
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <input type="email" {...register('email', { required: 'Email is required', pattern: { value: /^\S+@\S+$/i, message: 'Invalid email format' } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('registerPage.emailLabel')}</label>
+                <input type="email" {...register('email', { required: t('registerPage.emailRequired'), pattern: { value: /^\S+@\S+$/i, message: t('registerPage.emailInvalid') } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message as string}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('registerPage.passwordLabel')}</label>
                 <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'Password must be at least 6 characters' } })} className="w-full pr-10 pl-3 py-2 border border-gray-300 rounded-lg" />
+                  <input type={showPassword ? 'text' : 'password'} {...register('password', { required: t('registerPage.passwordRequired'), minLength: { value: 6, message: t('registerPage.passwordMinLength') } })} className="w-full pr-10 pl-3 py-2 border border-gray-300 rounded-lg" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500">{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button>
                 </div>
                 {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message as string}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('registerPage.confirmPasswordLabel')}</label>
                 <div className="relative">
-                  <input type={showConfirmPassword ? 'text' : 'password'} {...register('confirmPassword', { required: 'Please confirm your password', validate: value => value === password || 'Passwords do not match' })} className="w-full pr-10 pl-3 py-2 border border-gray-300 rounded-lg" />
+                  <input type={showConfirmPassword ? 'text' : 'password'} {...register('confirmPassword', { required: t('registerPage.confirmPasswordRequired'), validate: value => value === password || t('registerPage.passwordsNoMatch') })} className="w-full pr-10 pl-3 py-2 border border-gray-300 rounded-lg" />
                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500">{showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button>
                 </div>
                 {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message as string}</p>}
               </div>
 
               <button type="submit" disabled={loading} className="w-full bg-primary-500 text-white py-3 px-4 rounded-lg hover:bg-primary-600 font-medium disabled:opacity-50 flex items-center justify-center gap-2">
-                {loading ? <><Loader className="animate-spin h-5 w-5" /> Signing Up...</> : 'Sign Up'}
+                {loading ? <><Loader className="animate-spin h-5 w-5" /> {t('registerPage.signingUpButton')}</> : t('registerPage.signUpButton')}
               </button>
             </form>
             <div className="mt-6 text-center">
               <Link to="/login" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                Already have an account? Sign In
+                {t('registerPage.hasAccount')}
               </Link>
             </div>
           </div>

@@ -8,7 +8,6 @@ import { useTranslation } from '../hooks/useTranslation';
 import { Logo } from './Logo';
 import { CitySelector } from './CitySelector';
 import { TagInput } from './TagInput';
-import { ActivationCard } from './ActivationCard';
 import { placeServiceKeys, languageKeys } from '../data/services';
 import { supabase } from '../supabaseClient';
 import { mapSupabasePlaceToProfile } from '../data/data-mappers';
@@ -141,7 +140,7 @@ export const PlaceDashboard: React.FC = () => {
     const availableSlots = 5 - existingUrls.length;
 
     if (files.length > availableSlots) {
-        alert(`You can only upload ${availableSlots} more images.`);
+        alert(t('placeDashboard.uploadLimit', { count: availableSlots }));
         return;
     }
     
@@ -220,7 +219,7 @@ export const PlaceDashboard: React.FC = () => {
     }
   };
 
-  const handleConfirmLocation = async () => {
+  const handleGetCurrentLocation = async () => {
     setIsConfirmingLocation(true);
     setLocationError(null);
     try {
@@ -245,9 +244,11 @@ export const PlaceDashboard: React.FC = () => {
   const copyCodeToClipboard = () => {
     if (placeProfile?.login_code) {
       navigator.clipboard.writeText(placeProfile.login_code);
-      alert('Login code copied to clipboard!');
+      alert(t('placeDashboard.codeCopied'));
     }
   };
+
+  const isAccountActive = placeProfile?.status === 'active' && new Date(placeProfile.accountExpiry || 0) > new Date();
 
   const onSubmit = async (data: ProfileForm) => {
     if (!placeProfile) return;
@@ -262,6 +263,7 @@ export const PlaceDashboard: React.FC = () => {
       pricing_session_90: data.pricing90,
       pricing_session_120: data.pricing120,
       service_areas: data.serviceAreas,
+      status: 'pending',
     };
 
     const { error } = await supabase
@@ -271,17 +273,19 @@ export const PlaceDashboard: React.FC = () => {
 
     if (!error) {
       await fetchProfile();
-      alert('Profile updated successfully!');
+      if (!isAccountActive) {
+        navigate('/request-activation');
+      } else {
+        alert(t('placeDashboard.updateSuccess'));
+      }
     } else {
       console.error("Error updating profile:", error);
       alert(`Profile update failed: ${error.message}`);
     }
   };
   
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Profile...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center">{t('placeDashboard.loading')}</div>;
   if (!placeProfile) return null;
-
-  const isAccountActive = placeProfile.status === 'active' && new Date(placeProfile.accountExpiry || 0) > new Date();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -309,15 +313,7 @@ export const PlaceDashboard: React.FC = () => {
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-          {!isAccountActive && (
-            <ActivationCard 
-              entityId={placeProfile.id}
-              entityType="place"
-              loginCode={placeProfile.login_code}
-              onActivated={fetchProfile}
-            />
-          )}
-          <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8 ${!isAccountActive ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center space-x-3"><Building className="h-7 w-7 text-primary-600" /><span>{t('placeDashboard.businessProfile')}</span></h2>
@@ -327,7 +323,7 @@ export const PlaceDashboard: React.FC = () => {
                 {isAccountActive && (
                   <div className="flex items-center gap-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-1.5 rounded-lg">
                     <Star className="h-4 w-4" />
-                    <span>Premium Account (Rp150.000/month)</span>
+                    <span>{t('placeDashboard.premiumAccount')}</span>
                   </div>
                 )}
                 {placeProfile.accountNumber && (
@@ -339,8 +335,8 @@ export const PlaceDashboard: React.FC = () => {
                 {placeProfile.login_code && (
                   <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium px-3 py-1.5 rounded-lg">
                     <Key className="h-4 w-4" />
-                    <span>Login Code: <strong>{placeProfile.login_code}</strong></span>
-                    <button type="button" onClick={copyCodeToClipboard} title="Copy Code" className="ml-2 hover:text-blue-900">
+                    <span>{t('placeDashboard.loginCode')}<strong>{placeProfile.login_code}</strong></span>
+                    <button type="button" onClick={copyCodeToClipboard} title={t('placeDashboard.copyCode')} className="ml-2 hover:text-blue-900">
                       <Copy className="h-4 w-4" />
                     </button>
                   </div>
@@ -377,7 +373,7 @@ export const PlaceDashboard: React.FC = () => {
                   </div>
                   <input type="file" multiple ref={galleryFileInputRef} onChange={handleGalleryImageUpload} accept="image/*" className="hidden" />
                 </label>
-                {isUploading && <p className="text-sm text-gray-500 mt-2 flex items-center gap-2"><Loader className="h-4 w-4 animate-spin" /> Uploading images...</p>}
+                {isUploading && <p className="text-sm text-gray-500 mt-2 flex items-center gap-2"><Loader className="h-4 w-4 animate-spin" /> {t('placeDashboard.uploadingImages')}</p>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -403,7 +399,7 @@ export const PlaceDashboard: React.FC = () => {
                   <Controller name="city" control={control} render={({ field }) => <CitySelector {...field} />} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Surrounding Service Areas</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('placeDashboard.alsoServing')}</label>
                   <Controller name="serviceAreas" control={control} render={({ field }) => <TagInput {...field} placeholder="e.g., Kuta, Seminyak..." />} />
                 </div>
               </div>
@@ -411,16 +407,16 @@ export const PlaceDashboard: React.FC = () => {
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-md font-semibold text-gray-800 flex items-center gap-2"><MapPin className="h-5 w-5 text-gray-500"/>{t('placeDashboard.locationCoordinates')}</h4>
-                  <button type="button" onClick={handleConfirmLocation} disabled={isConfirmingLocation} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-wait">
-                    {isConfirmingLocation ? <Loader className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                    <span>{isConfirmingLocation ? t('locationModal.gettingLocation') : t('placeDashboard.confirmLocation')}</span>
+                  <button type="button" onClick={handleGetCurrentLocation} disabled={isConfirmingLocation} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-wait">
+                    {isConfirmingLocation ? <Loader className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                    <span>{isConfirmingLocation ? t('locationModal.gettingLocation') : t('placeDashboard.getCurrentLocation')}</span>
                   </button>
                 </div>
-                <p className="text-sm text-gray-600 mb-3">{t('placeDashboard.confirmLocationInfo')}</p>
+                <p className="text-sm text-gray-600 mb-3">{t('placeDashboard.locationInfo')}</p>
                 {locationError && <p className="text-red-500 text-xs mb-3">{locationError}</p>}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.latitude')}</label><input type="number" step="any" {...register('lat', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readOnly /></div>
-                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.longitude')}</label><input type="number" step="any" {...register('lng', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readOnly /></div>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.latitude')}</label><input type="number" step="any" {...register('lat', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('placeDashboard.longitude')}</label><input type="number" step="any" {...register('lng', { valueAsNumber: true })} className="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
                 </div>
               </div>
 
@@ -466,7 +462,11 @@ export const PlaceDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-gray-200"><button type="submit" className="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 font-medium">{t('placeDashboard.updateProfile')}</button></div>
+              <div className="flex justify-end pt-4 border-t border-gray-200">
+                <button type="submit" className="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 font-medium">
+                  {isAccountActive ? t('placeDashboard.updateProfile') : t('placeDashboard.submitLive')}
+                </button>
+              </div>
             </form>
           </div>
         </motion.div>

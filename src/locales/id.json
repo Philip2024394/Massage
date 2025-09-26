@@ -99,9 +99,16 @@
     "services": "Layanan Pijat yang Ditawarkan",
     "specialties": "Spesialisasi",
     "updateProfile": "Perbarui Profil",
+    "submitLive": "Kirim untuk Ditayangkan",
     "updateSuccess": "Profil berhasil diperbarui!",
-    "confirmLocation": "Konfirmasi Lokasi Saya",
-    "confirmLocationInfo": "Klik tombol untuk mengisi koordinat Anda secara otomatis berdasarkan lokasi Anda saat ini. Ini diperlukan untuk perhitungan jarak."
+    "getCurrentLocation": "Dapatkan Lokasi Saat Ini",
+    "locationInfo": "Masukkan koordinat secara manual atau klik tombol untuk mendapatkannya dari perangkat Anda. Ini diperlukan untuk perhitungan jarak.",
+    "loading": "Memuat Profil...",
+    "loginCode": "Kode Anda: ",
+    "copyCode": "Salin Kode",
+    "codeCopied": "Kode login disalin ke clipboard!",
+    "premiumAccount": "Akun Premium (Rp150.000/bulan)",
+    "alsoServing": "Juga Melayani"
   },
   "placeDashboard": {
     "status": "Status:",
@@ -123,10 +130,19 @@
     "services": "Layanan yang Ditawarkan",
     "languages": "Bahasa yang Digunakan",
     "updateProfile": "Perbarui Profil",
+    "submitLive": "Kirim untuk Ditayangkan",
     "updateSuccess": "Profil berhasil diperbarui!",
-    "confirmLocation": "Konfirmasi Lokasi Saya",
-    "confirmLocationInfo": "Klik tombol untuk mengisi koordinat Anda secara otomatis berdasarkan lokasi Anda saat ini. Ini diperlukan untuk perhitungan jarak.",
-    "openingHours": "Jam Buka"
+    "getCurrentLocation": "Dapatkan Lokasi Saat Ini",
+    "locationInfo": "Masukkan koordinat secara manual atau klik tombol untuk mendapatkannya dari perangkat Anda. Ini diperlukan untuk perhitungan jarak.",
+    "openingHours": "Jam Buka",
+    "loading": "Memuat Profil...",
+    "loginCode": "Kode Login: ",
+    "copyCode": "Salin Kode",
+    "codeCopied": "Kode login disalin ke clipboard!",
+    "premiumAccount": "Akun Premium (Rp150.000/bulan)",
+    "alsoServing": "Juga Melayani",
+    "uploadingImages": "Mengunggah gambar...",
+    "uploadLimit": "Anda hanya dapat mengunggah {{count}} gambar lagi."
   },
   "adminDashboard": {
     "title": "Panel Admin",
@@ -151,7 +167,11 @@
     "reviewContent": "Konten",
     "edit": "Ubah",
     "delete": "Hapus",
-    "reviewStatus": { "approved": "Disetujui", "pending": "Tertunda", "rejected": "Ditolak" }
+    "reviewStatus": { "approved": "Disetujui", "pending": "Tertunda", "rejected": "Ditolak" },
+    "loading": "Memuat Panel Admin...",
+    "live": "Tayang",
+    "remainLive": "Tetap Tayang",
+    "subscriptionUpdateFailed": "Gagal memperbarui langganan: {{message}}"
   },
   "reviewsPage": {
     "backToBrowse": "Kembali",
@@ -256,5 +276,61 @@
     "specialty": {
       "painRelief": "Pereda Nyeri", "stressReduction": "Pengurangan Stres", "sportsRecovery": "Pemulihan Olahraga", "pregnancyCare": "Perawatan Kehamilan", "injuryRehab": "Rehabilitasi Cedera", "relaxation": "Relaksasi", "chronicPain": "Nyeri Kronis", "flexibility": "Fleksibilitas", "circulation": "Sirkulasi", "wellness": "Kebugaran", "traditionalHealing": "Penyembuhan Tradisional", "energyBalance": "Keseimbangan Energi", "facial": "Pijat Wajah", "babyCare": "Perawatan Bayi", "maternalCare": "Perawatan Ibu"
     }
+  },
+  "loginPage": {
+    "title": "Masuk",
+    "emailLabel": "Email atau Kode Admin",
+    "emailPlaceholder": "anda@email.com",
+    "passwordLabel": "Kata Sandi",
+    "passwordPlaceholder": "••••••••",
+    "adminDetected": "Login admin terdeteksi. Kata sandi tidak diperlukan.",
+    "signInButton": "Masuk",
+    "signingInButton": "Masuk...",
+    "noAccount": "Belum punya akun? Daftar"
+  },
+  "registerPage": {
+    "title": "Buat Akun",
+    "accountTypeLabel": "Saya seorang...",
+    "therapist": "Terapis",
+    "place": "Tempat Pijat",
+    "nameLabelTherapist": "Nama Lengkap Anda",
+    "nameLabelPlace": "Nama Bisnis",
+    "nameRequired": "Nama wajib diisi",
+    "emailLabel": "Alamat Email",
+    "emailRequired": "Email wajib diisi",
+    "emailInvalid": "Format email tidak valid",
+    "passwordLabel": "Kata Sandi",
+    "passwordRequired": "Kata sandi wajib diisi",
+    "passwordMinLength": "Kata sandi minimal 6 karakter",
+    "confirmPasswordLabel": "Konfirmasi Kata Sandi",
+    "confirmPasswordRequired": "Harap konfirmasi kata sandi Anda",
+    "passwordsNoMatch": "Kata sandi tidak cocok",
+    "signUpButton": "Daftar",
+    "signingUpButton": "Mendaftar...",
+    "hasAccount": "Sudah punya akun? Masuk"
+  },
+  "activation": {
+    "accountInactive": "Akun Tidak Aktif",
+    "inactiveMessage": "Akun Anda saat ini tidak aktif atau telah kedaluwarsa. Silakan hubungi penjualan melalui WhatsApp untuk mengaktifkan langganan 1 bulan Anda.",
+    "subscriptionTitle": "Langganan 1 Bulan",
+    "contactSales": "Hubungi Penjualan untuk Aktivasi",
+    "payViaWhatsApp": "Bayar via WhatsApp",
+    "profileSubmitted": "Profil Terkirim!",
+    "submittedMessage": "Profil Anda telah disimpan. Silakan selesaikan pembayaran untuk mengaktifkan akun Anda dan ditayangkan.",
+    "paymentWhatsAppButton": "WhatsApp Pembayaran",
+    "adminActivationNote": "Akun Anda akan diaktifkan oleh admin setelah pembayaran dikonfirmasi.",
+    "backToDashboard": "Kembali ke Dasbor",
+    "accountPending": "Akun Menunggu Aktivasi"
+  },
+  "registrationSuccess": {
+    "title": "Pendaftaran Berhasil!",
+    "message": "Silakan periksa email Anda untuk memverifikasi akun Anda. Setelah verifikasi, Anda dapat masuk.",
+    "backToSignIn": "Kembali untuk Masuk"
+  },
+  "profilePage": {
+    "notFoundTitle": "Profil Tidak Ditemukan",
+    "notFoundMessageTherapist": "Kode yang Anda masukkan tidak cocok dengan profil terapis mana pun.",
+    "notFoundMessagePlace": "Kode yang Anda masukkan tidak cocok dengan profil tempat mana pun.",
+    "backToSignIn": "Kembali untuk Masuk"
   }
 }

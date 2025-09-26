@@ -99,9 +99,16 @@
     "services": "Massage Services Offered",
     "specialties": "Specialties",
     "updateProfile": "Update Profile",
+    "submitLive": "Submit Live",
     "updateSuccess": "Profile updated successfully!",
-    "confirmLocation": "Confirm My Location",
-    "confirmLocationInfo": "Click the button to automatically fill your coordinates based on your current location. This is required for distance calculations."
+    "getCurrentLocation": "Get Current Location",
+    "locationInfo": "Enter coordinates manually or click the button to get them from your device. This is required for distance calculations.",
+    "loading": "Loading Profile...",
+    "loginCode": "Your Code: ",
+    "copyCode": "Copy Code",
+    "codeCopied": "Login code copied to clipboard!",
+    "premiumAccount": "Premium Account (Rp150.000/month)",
+    "alsoServing": "Also Serving"
   },
   "placeDashboard": {
     "status": "Status:",
@@ -123,10 +130,19 @@
     "services": "Services Offered",
     "languages": "Languages Spoken",
     "updateProfile": "Update Profile",
+    "submitLive": "Submit Live",
     "updateSuccess": "Profile updated successfully!",
-    "confirmLocation": "Confirm My Location",
-    "confirmLocationInfo": "Click the button to automatically fill your coordinates based on your current location. This is required for distance calculations.",
-    "openingHours": "Opening Hours"
+    "getCurrentLocation": "Get Current Location",
+    "locationInfo": "Enter coordinates manually or click the button to get them from your device. This is required for distance calculations.",
+    "openingHours": "Opening Hours",
+    "loading": "Loading Profile...",
+    "loginCode": "Login Code: ",
+    "copyCode": "Copy Code",
+    "codeCopied": "Login code copied to clipboard!",
+    "premiumAccount": "Premium Account (Rp150.000/month)",
+    "alsoServing": "Also Serving",
+    "uploadingImages": "Uploading images...",
+    "uploadLimit": "You can only upload {{count}} more images."
   },
   "adminDashboard": {
     "title": "Admin Panel",
@@ -151,7 +167,11 @@
     "reviewContent": "Content",
     "edit": "Edit",
     "delete": "Delete",
-    "reviewStatus": { "approved": "Approved", "pending": "Pending", "rejected": "Rejected" }
+    "reviewStatus": { "approved": "Approved", "pending": "Pending", "rejected": "Rejected" },
+    "loading": "Loading Admin Panel...",
+    "live": "Live",
+    "remainLive": "Remain Live",
+    "subscriptionUpdateFailed": "Failed to update subscription: {{message}}"
   },
   "reviewsPage": {
     "backToBrowse": "Back to Browse",
@@ -257,5 +277,61 @@
       "painRelief": "Pain Relief", "stressReduction": "Stress Reduction", "sportsRecovery": "Sports Recovery", "pregnancyCare": "Pregnancy Care", "injuryRehab": "Injury Rehabilitation",
       "relaxation": "Relaxation", "chronicPain": "Chronic Pain", "flexibility": "Flexibility", "circulation": "Circulation", "wellness": "Wellness", "traditionalHealing": "Traditional Healing", "energyBalance": "Energy Balance", "facial": "Facial Massage", "babyCare": "Baby Care", "maternalCare": "Maternal Care"
     }
+  },
+  "loginPage": {
+    "title": "Sign In",
+    "emailLabel": "Email or Admin Code",
+    "emailPlaceholder": "your@email.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "adminDetected": "Admin login detected. Password is not required.",
+    "signInButton": "Sign In",
+    "signingInButton": "Signing In...",
+    "noAccount": "Don't have an account? Sign Up"
+  },
+  "registerPage": {
+    "title": "Create an Account",
+    "accountTypeLabel": "I am a...",
+    "therapist": "Therapist",
+    "place": "Massage Place",
+    "nameLabelTherapist": "Your Full Name",
+    "nameLabelPlace": "Business Name",
+    "nameRequired": "Name is required",
+    "emailLabel": "Email Address",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format",
+    "passwordLabel": "Password",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordRequired": "Please confirm your password",
+    "passwordsNoMatch": "Passwords do not match",
+    "signUpButton": "Sign Up",
+    "signingUpButton": "Signing Up...",
+    "hasAccount": "Already have an account? Sign In"
+  },
+  "activation": {
+    "accountInactive": "Account Inactive",
+    "inactiveMessage": "Your account is currently inactive or has expired. Please contact sales via WhatsApp to activate your 1-month subscription.",
+    "subscriptionTitle": "1 Month Subscription",
+    "contactSales": "Contact Sales to Activate",
+    "payViaWhatsApp": "Pay via WhatsApp",
+    "profileSubmitted": "Profile Submitted!",
+    "submittedMessage": "Your profile has been saved. Please complete the payment to activate your account and go live.",
+    "paymentWhatsAppButton": "Payment WhatsApp",
+    "adminActivationNote": "Your account will be activated by an admin after payment is confirmed.",
+    "backToDashboard": "Back to Dashboard",
+    "accountPending": "Account Pending Activation"
+  },
+  "registrationSuccess": {
+    "title": "Registration Successful!",
+    "message": "Please check your email to verify your account. After verification, you can sign in.",
+    "backToSignIn": "Back to Sign In"
+  },
+  "profilePage": {
+    "notFoundTitle": "Profile Not Found",
+    "notFoundMessageTherapist": "The code you entered does not match any therapist profile.",
+    "notFoundMessagePlace": "The code you entered does not match any place profile.",
+    "backToSignIn": "Back to Sign In"
   }
 }

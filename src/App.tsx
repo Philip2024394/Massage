@@ -15,6 +15,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PaymentPage } from './pages/PaymentPage';
 import { AgentSignUpPage } from './pages/AgentSignUpPage';
+import { RequestActivationPage } from './pages/RequestActivationPage';
 import { UserLocation, FilterOptions, TherapistProfile, MassagePlaceProfile } from './types';
 import { calculateDistance } from './utils/location';
 import { supabase } from './supabaseClient';
@@ -145,6 +146,7 @@ function App() {
             <Route path="/agent-signup" element={<AgentSignUpPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/package-details" element={<PackageDetailsPage />} />
+            <Route path="/request-activation" element={<RequestActivationPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
           <LocationModal isOpen={showLocationModal} onClose={() => setShowLocationModal(false)} onLocationSet={setUserLocation} />

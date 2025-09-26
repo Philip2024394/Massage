@@ -75,10 +75,10 @@ export const PlaceProfilePage: React.FC = () => {
   if (!place) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">Profile Not Found</h2>
-        <p className="text-gray-600 mb-6">The code you entered does not match any place profile.</p>
+        <h2 className="text-2xl font-bold text-red-600 mb-4">{t('profilePage.notFoundTitle')}</h2>
+        <p className="text-gray-600 mb-6">{t('profilePage.notFoundMessagePlace')}</p>
         <Link to="/login" className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600">
-          Back to Sign In
+          {t('profilePage.backToSignIn')}
         </Link>
       </div>
     );
@@ -159,7 +159,7 @@ export const PlaceProfilePage: React.FC = () => {
 
           {place.serviceAreas && place.serviceAreas.length > 0 && (
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">Also Serving</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">{t('placeDashboard.alsoServing')}</h3>
               <div className="flex flex-wrap gap-2">
                 {place.serviceAreas.map(area => (
                   <span key={area} className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">{area}</span>
