@@ -51,7 +51,7 @@ export const LandingPage: React.FC = () => {
           </Link>
           <Link 
             to="/home?view=places"
-            className="w-full sm:w-auto flex-1 bg-white/90 text-gray-800 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 ease-in-out hover:bg-white hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+            className="w-full sm:w-auto flex-1 bg-primary-500 text-white font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 ease-in-out hover:bg-primary-600 hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
           >
             <Building className="h-5 w-5" />
             {t('landingPage.findPlace')}

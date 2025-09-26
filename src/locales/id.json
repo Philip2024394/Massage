@@ -6,8 +6,8 @@
     "selectLanguage": "Silakan pilih bahasa Anda",
     "english": "Inggris",
     "indonesian": "Bahasa Indonesia",
-    "findTherapist": "Cari Terapis",
-    "findPlace": "Cari Tempat"
+    "findTherapist": "Pijat di Rumah",
+    "findPlace": "Tempat Pijat"
   },
   "header": {
     "brand": "2Go Massage",
@@ -83,7 +83,7 @@
     "status": "Status:",
     "online": "Online",
     "offline": "Offline",
-    "profileManagement": "Manajemen Profil",
+    "profileManagement": "Perbarui Profil Anda",
     "profileInfo": "Perbarui profil Anda untuk menarik lebih banyak klien.",
     "profilePhoto": "Foto Profil",
     "updatePhoto": "Perbarui foto profil Anda untuk membantu klien mengenali Anda.",

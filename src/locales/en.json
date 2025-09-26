@@ -6,8 +6,8 @@
     "selectLanguage": "Please select your language",
     "english": "English",
     "indonesian": "Bahasa Indonesia",
-    "findTherapist": "Find a Therapist",
-    "findPlace": "Find a Place"
+    "findTherapist": "Home Massage",
+    "findPlace": "Massage Place"
   },
   "header": {
     "brand": "2Go Massage",
@@ -83,7 +83,7 @@
     "status": "Status:",
     "online": "Online",
     "offline": "Offline",
-    "profileManagement": "Profile Management",
+    "profileManagement": "Update your profile",
     "profileInfo": "Update your profile to attract more clients.",
     "profilePhoto": "Profile Photo",
     "updatePhoto": "Update your profile photo to help clients recognize you.",
