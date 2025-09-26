@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { Loader, ShieldCheck, Key, Info } from 'lucide-react';
+import { Loader, Key, Info, MessageCircle } from 'lucide-react';
+import { getWhatsAppUrl } from '../utils/location';
 
 interface ActivationCardProps {
   entityId: string;
@@ -11,14 +11,13 @@ interface ActivationCardProps {
 }
 
 export const ActivationCard: React.FC<ActivationCardProps> = ({ entityId, entityType, loginCode, onActivated }) => {
-  const navigate = useNavigate();
   const [activationCode, setActivationCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
-  const handleStripeCheckout = () => {
-    navigate('/stripe-checkout', { state: { entityId, entityType, loginCode } });
-  };
+  const salesNumber = '+6281392000050';
+  const message = "Hi, I would like to join the 2Go Massage Directory. Can You provide Details With Payment Link. Thank You.";
+  const whatsAppUrl = getWhatsAppUrl(salesNumber, message);
 
   const handleCodeActivation = async () => {
     if (!activationCode) {
@@ -63,14 +62,17 @@ export const ActivationCard: React.FC<ActivationCardProps> = ({ entityId, entity
               <p className="text-2xl font-extrabold text-gray-900 mt-1">Rp150.000</p>
             </div>
             
-            <button
-              onClick={handleStripeCheckout}
-              className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 font-bold flex items-center justify-center gap-2"
+            <a
+              href={whatsAppUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-green-600 text-white py-2.5 px-4 rounded-lg hover:bg-green-700 font-bold flex items-center justify-center gap-2"
             >
-              Pay with Stripe
-            </button>
+              <MessageCircle className="h-5 w-5" />
+              <span>2Go Payments</span>
+            </a>
             <p className="text-xs text-gray-500 mt-1 text-center flex items-center justify-center gap-1">
-              <ShieldCheck className="h-3 w-3" /> Secure Payment Simulation
+              <MessageCircle className="h-3 w-3" /> Pay via WhatsApp
             </p>
 
             <div className="relative my-4 text-center">

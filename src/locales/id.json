@@ -1,8 +1,11 @@
 {
   "landingPage": {
+    "title": "Oasis Relaksasi Anda, Diantarkan.",
+    "subtitle": "Temukan terapis pijat ahli untuk layanan di rumah atau temukan tempat pijat yang tenang di dekat Anda.",
+    "cta": "Jelajahi Layanan",
     "selectLanguage": "Silakan pilih bahasa Anda",
     "english": "Inggris",
-    "indonesian": "Indonesia"
+    "indonesian": "Bahasa Indonesia"
   },
   "header": {
     "brand": "2Go Massage",

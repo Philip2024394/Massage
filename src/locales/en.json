@@ -1,8 +1,11 @@
 {
   "landingPage": {
+    "title": "Your Oasis of Relaxation, Delivered.",
+    "subtitle": "Find expert massage therapists for home service or discover serene massage places near you.",
+    "cta": "Explore Services",
     "selectLanguage": "Please select your language",
     "english": "English",
-    "indonesian": "Indonesian"
+    "indonesian": "Bahasa Indonesia"
   },
   "header": {
     "brand": "2Go Massage",
