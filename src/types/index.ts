@@ -12,6 +12,7 @@ export interface TherapistProfile {
   experience: number;
   isOnline: boolean;
   status: 'active' | 'pending' | 'blocked' | 'unpaid';
+  is_continuous: boolean;
   location: {
     lat: number;
     lng: number;
@@ -59,6 +60,7 @@ export interface MassagePlaceProfile {
   reviewCount: number;
   address: string;
   city: string;
+  is_continuous: boolean;
   location: {
     lat: number;
     lng: number;

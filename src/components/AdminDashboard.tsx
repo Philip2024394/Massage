@@ -1,39 +1,98 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { LogOut, Users, Check, Building, Home, Key, Gift, MessageSquare } from 'lucide-react';
+import { LogOut, Users, Building, Home, MessageSquare, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { TherapistProfile, MassagePlaceProfile, Review, AuthInfo } from '../types';
+import { TherapistProfile, MassagePlaceProfile, Review } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
 import { Logo } from './Logo';
-import { AdminActivationModal } from './AdminActivationModal';
-import { SpecialCodesList } from './SpecialCodesList';
 import { supabase } from '../supabaseClient';
 import { mapSupabaseTherapistToProfile, mapSupabasePlaceToProfile, mapSupabaseReviewToAppReview } from '../data/data-mappers';
 import { useAuth } from '../context/AuthContext';
 
-const ToggleSwitch: React.FC<{ isOn: boolean; onToggle: (isOn: boolean) => void; }> = ({ isOn, onToggle }) => (
-  <button onClick={() => onToggle(!isOn)} className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isOn ? 'bg-primary-600' : 'bg-gray-300'}`}>
+const ToggleSwitch: React.FC<{ isOn: boolean; onToggle: (isOn: boolean) => void; disabled?: boolean; }> = ({ isOn, onToggle, disabled }) => (
+  <button onClick={() => onToggle(!isOn)} disabled={disabled} className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isOn ? 'bg-primary-600' : 'bg-gray-300'}`}>
     <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isOn ? 'translate-x-6' : 'translate-x-1'}`} />
   </button>
 );
 
+const SubscriptionControl: React.FC<{ entity: TherapistProfile | MassagePlaceProfile; onUpdate: () => void; }> = ({ entity, onUpdate }) => {
+  const [isLive, setIsLive] = useState(entity.status === 'active');
+  const [isContinuous, setIsContinuous] = useState(entity.is_continuous);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscriptionChange = async (live: boolean, continuous: boolean) => {
+    setLoading(true);
+    const { error } = await supabase.functions.invoke('admin-set-subscription', {
+      body: { 
+        entityId: entity.id, 
+        entityType: 'name' in entity ? 'therapist' : 'place', 
+        isLive: live,
+        isContinuous: continuous,
+      }
+    });
+
+    if (error) {
+      console.error(`Subscription update failed:`, error);
+      alert(`Failed to update subscription: ${error.message}`);
+      // Revert UI state on failure
+      setIsLive(entity.status === 'active');
+      setIsContinuous(entity.is_continuous);
+    } else {
+      onUpdate(); // Re-fetch data from parent
+    }
+    setLoading(false);
+  };
+
+  const handleToggleLive = (newLiveState: boolean) => {
+    setIsLive(newLiveState);
+    handleSubscriptionChange(newLiveState, isContinuous);
+  };
+
+  const handleToggleContinuous = (newContinuousState: boolean) => {
+    setIsContinuous(newContinuousState);
+    // If the account is already live, update the subscription immediately
+    if (isLive) {
+      handleSubscriptionChange(true, newContinuousState);
+    }
+  };
+
+  return (
+    <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2">
+        <ToggleSwitch isOn={isLive} onToggle={handleToggleLive} disabled={loading} />
+        <span className="text-sm font-medium text-gray-700">Live</span>
+      </div>
+      <div className="flex items-center space-x-2">
+        <input 
+          id={`continuous-${entity.id}`}
+          type="checkbox"
+          checked={isContinuous}
+          onChange={(e) => handleToggleContinuous(e.target.checked)}
+          disabled={loading}
+          className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50"
+        />
+        <label htmlFor={`continuous-${entity.id}`} className="text-sm text-gray-600">Remain Live</label>
+      </div>
+    </div>
+  );
+};
+
+
 export const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
-  const { profile: authProfile, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'therapists' | 'places' | 'reviews' | 'codes'>('therapists');
+  const { signOut } = useAuth();
+  const [activeTab, setActiveTab] = useState<'therapists' | 'places' | 'reviews'>('therapists');
   const [therapists, setTherapists] = useState<TherapistProfile[]>([]);
   const [places, setPlaces] = useState<MassagePlaceProfile[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isActivationModalOpen, setActivationModalOpen] = useState(false);
-  const [selectedEntity, setSelectedEntity] = useState<{id: string, name: string, type: 'therapist' | 'place'} | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [therapistsRes, placesRes, reviewsRes] = await Promise.all([
-        supabase.from('therapists').select('*'),
-        supabase.from('places').select('*'),
+        supabase.from('therapists').select('*').order('created_at', { ascending: false }),
+        supabase.from('places').select('*').order('created_at', { ascending: false }),
         supabase.from('reviews').select('*').order('created_at', { ascending: false })
       ]);
       if (therapistsRes.error) throw therapistsRes.error;
@@ -54,55 +113,10 @@ export const AdminDashboard: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  const handleUpdateStatus = async (id: string, newStatus: 'active' | 'blocked', type: 'therapist' | 'place') => {
-    if (authProfile?.type !== 'admin') {
-      alert('Unauthorized action.');
-      return;
-    }
-    
-    const { error } = await supabase.functions.invoke('admin-update-status', {
-      body: { 
-        entityId: id, 
-        entityType: type, 
-        status: newStatus,
-        adminCode: (authProfile as AuthInfo).code
-      }
-    });
-
-    if (error) {
-      console.error(`Status update failed:`, error);
-      alert(`Failed to update status: ${error.message}`);
-    } else {
-      await fetchData();
-    }
-  };
-
   const handleUpdateReview = async (id: string, newStatus: 'approved' | 'rejected') => {
     const { error } = await supabase.from('reviews').update({ status: newStatus }).eq('id', id);
     if (!error) fetchData();
   };
-
-  const handleOpenActivationModal = (entity: {id: string, name: string, type: 'therapist' | 'place'}) => {
-    setSelectedEntity(entity);
-    setActivationModalOpen(true);
-  };
-
-  const handleConfirmActivation = async () => {
-    if (!selectedEntity) return;
-    
-    const { error } = await supabase.functions.invoke('admin-activate-account', {
-      body: { entityId: selectedEntity.id, entityType: selectedEntity.type }
-    });
-
-    if (error) {
-      console.error('Admin activation error:', error);
-      alert(`Activation failed: ${error.message}`);
-    } else {
-      await fetchData();
-      setActivationModalOpen(false);
-    }
-  };
-
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Admin Panel...</div>;
 
@@ -131,22 +145,12 @@ export const AdminDashboard: React.FC = () => {
             <TabButton id="therapists" activeTab={activeTab} setActiveTab={setActiveTab} icon={<Users className="h-5 w-5" />} label={t('adminDashboard.manageTherapists')} />
             <TabButton id="places" activeTab={activeTab} setActiveTab={setActiveTab} icon={<Building className="h-5 w-5" />} label={t('adminDashboard.managePlaces')} />
             <TabButton id="reviews" activeTab={activeTab} setActiveTab={setActiveTab} icon={<MessageSquare className="h-5 w-5" />} label={t('adminDashboard.manageReviews')} />
-            <TabButton id="codes" activeTab={activeTab} setActiveTab={setActiveTab} icon={<Gift className="h-5 w-5" />} label={t('adminDashboard.activationCodes')} />
           </nav>
         </div>
-        {activeTab === 'therapists' && <TherapistsTable therapists={therapists} onUpdateStatus={handleUpdateStatus} onActivate={handleOpenActivationModal} t={t} />}
-        {activeTab === 'places' && <PlacesTable places={places} onUpdateStatus={handleUpdateStatus} onActivate={handleOpenActivationModal} t={t} />}
+        {activeTab === 'therapists' && <TherapistsTable therapists={therapists} onUpdate={fetchData} t={t} />}
+        {activeTab === 'places' && <PlacesTable places={places} onUpdate={fetchData} t={t} />}
         {activeTab === 'reviews' && <ReviewsTable reviews={reviews} profiles={[...therapists, ...places]} onUpdateReview={handleUpdateReview} t={t} />}
-        {activeTab === 'codes' && <SpecialCodesList />}
       </main>
-      {selectedEntity && (
-        <AdminActivationModal 
-          isOpen={isActivationModalOpen}
-          onClose={() => setActivationModalOpen(false)}
-          onConfirm={handleConfirmActivation}
-          entityName={selectedEntity.name}
-        />
-      )}
     </div>
   );
 };
@@ -164,13 +168,12 @@ const statusColors: { [key: string]: string } = {
   unpaid: 'bg-blue-100 text-blue-800',
 };
 
-const TherapistsTable = ({ therapists, onUpdateStatus, onActivate, t }: any) => (
+const TherapistsTable = ({ therapists, onUpdate, t }: any) => (
   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
     <table className="min-w-full divide-y divide-gray-200">
       <thead className="bg-gray-50">
         <tr>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adminDashboard.therapist')}</th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adminDashboard.whatsappNumber')}</th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adminDashboard.status')}</th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adminDashboard.actions')}</th>
         </tr>
@@ -178,11 +181,10 @@ const TherapistsTable = ({ therapists, onUpdateStatus, onActivate, t }: any) => 
       <tbody className="bg-white divide-y divide-gray-200">
         {therapists.map((therapist: TherapistProfile) => (
           <tr key={therapist.id}>
-            <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center"><img className="h-10 w-10 rounded-full object-cover" src={therapist.profileImageUrl || '/placeholder.png'} alt={therapist.name} /><div className="ml-4"><div className="text-sm font-medium text-gray-900">{therapist.name}</div><div className="text-sm text-gray-500">{therapist.location.city}</div></div></div></td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{therapist.phone}</td>
+            <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center"><img className="h-10 w-10 rounded-full object-cover" src={therapist.profileImageUrl || '/placeholder.png'} alt={therapist.name} /><div className="ml-4"><div className="text-sm font-medium text-gray-900">{therapist.name}</div><div className="text-sm text-gray-500">{therapist.phone || 'No phone'}</div></div></div></td>
             <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[therapist.status]}`}>{t(`adminDashboard.${therapist.status}`)}</span></td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              {therapist.status === 'unpaid' ? <button onClick={() => onActivate({id: therapist.id, name: therapist.name, type: 'therapist'})} className="flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200"><Key className="h-4 w-4" /><span>Activate</span></button> : <div className="flex items-center space-x-2"><ToggleSwitch isOn={therapist.status === 'active'} onToggle={(isOn) => onUpdateStatus(therapist.id, isOn ? 'active' : 'blocked', 'therapist')} /><span className="text-xs text-gray-600">{t('adminDashboard.visibility')}</span></div>}
+              <SubscriptionControl entity={therapist} onUpdate={onUpdate} />
             </td>
           </tr>
         ))}
@@ -191,13 +193,12 @@ const TherapistsTable = ({ therapists, onUpdateStatus, onActivate, t }: any) => 
   </motion.div>
 );
 
-const PlacesTable = ({ places, onUpdateStatus, onActivate, t }: any) => (
+const PlacesTable = ({ places, onUpdate, t }: any) => (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adminDashboard.place')}</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adminDashboard.whatsappNumber')}</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adminDashboard.status')}</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('adminDashboard.actions')}</th>
           </tr>
@@ -205,11 +206,10 @@ const PlacesTable = ({ places, onUpdateStatus, onActivate, t }: any) => (
         <tbody className="bg-white divide-y divide-gray-200">
           {places.map((place: MassagePlaceProfile) => (
             <tr key={place.id}>
-              <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center"><img className="h-10 w-10 rounded-full object-cover" src={place.profileImageUrl || '/placeholder.png'} alt={place.name} /><div className="ml-4"><div className="text-sm font-medium text-gray-900">{place.name}</div><div className="text-sm text-gray-500">{place.city}</div></div></div></td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{place.phone}</td>
+              <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center"><img className="h-10 w-10 rounded-full object-cover" src={place.profileImageUrl || '/placeholder.png'} alt={place.name} /><div className="ml-4"><div className="text-sm font-medium text-gray-900">{place.name}</div><div className="text-sm text-gray-500">{place.phone || 'No phone'}</div></div></div></td>
               <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[place.status]}`}>{t(`adminDashboard.${place.status}`)}</span></td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                {place.status === 'unpaid' ? <button onClick={() => onActivate({id: place.id, name: place.name, type: 'place'})} className="flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200"><Key className="h-4 w-4" /><span>Activate</span></button> : <div className="flex items-center space-x-2"><ToggleSwitch isOn={place.status === 'active'} onToggle={(isOn) => onUpdateStatus(place.id, isOn ? 'active' : 'blocked', 'place')} /><span className="text-xs text-gray-600">{t('adminDashboard.visibility')}</span></div>}
+                <SubscriptionControl entity={place} onUpdate={onUpdate} />
               </td>
             </tr>
           ))}

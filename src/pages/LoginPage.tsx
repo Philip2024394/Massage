@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/Logo';
 import { Mail, Key, Loader, Eye, EyeOff, Home } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, formState: { errors }, control } = useForm();
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  const emailValue = useWatch({ control, name: 'email' });
+  const isAdminLogin = emailValue === import.meta.env.VITE_ADMIN_CODE;
 
   const onSubmit = async (data: any) => {
     setLoading(true);
@@ -62,22 +65,29 @@ export const LoginPage: React.FC = () => {
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message as string}</p>}
               </div>
 
-              <div>
+              <div className={`transition-opacity duration-300 ${isAdminLogin ? 'opacity-50' : 'opacity-100'}`}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <div className="relative">
                   <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    {...register('password', { required: 'Password is required' })}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg"
+                    {...register('password', { required: !isAdminLogin ? 'Password is required' : false })}
+                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                     placeholder="••••••••"
+                    disabled={isAdminLogin}
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500" disabled={isAdminLogin}>
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
                 {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message as string}</p>}
               </div>
+              
+              {isAdminLogin && (
+                <div className="text-center text-sm text-primary-600 bg-primary-50 p-3 rounded-lg">
+                  Admin login detected. Password is not required.
+                </div>
+              )}
 
               <button type="submit" disabled={loading} className="w-full bg-primary-500 text-white py-3 px-4 rounded-lg hover:bg-primary-600 font-medium disabled:opacity-50 flex items-center justify-center gap-2">
                 {loading ? <><Loader className="animate-spin h-5 w-5" /> Signing In...</> : 'Sign In'}

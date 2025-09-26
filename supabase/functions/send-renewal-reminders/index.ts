@@ -30,6 +30,7 @@ async function getExpiringAccounts(supabase: SupabaseClient, tableName: 'therapi
     .from(tableName)
     .select('name, email, phone, login_code')
     .eq('status', 'active')
+    .eq('is_continuous', false) // Only send reminders for non-continuous subscriptions
     .gte('account_expiry', startDate)
     .lte('account_expiry', endDate);
   
@@ -53,7 +54,7 @@ serve(async () => {
 
     for (const account of allExpiringAccounts) {
       const { name, email, phone, login_code, type } = account;
-      const dashboardUrl = `${Deno.env.get('VITE_SITE_URL')}/${type}-dashboard/${login_code}`;
+      const dashboardUrl = `${Deno.env.get('VITE_SITE_URL')}/login`;
       const salesWhatsAppUrl = `https://wa.me/${SALES_WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi, I'd like to renew my subscription for ${name} (Code: ${login_code}).`)}`;
 
       // --- Email to User ---
@@ -65,25 +66,17 @@ serve(async () => {
           <div style="font-family: sans-serif; font-size: 16px; line-height: 1.6;">
             <h2>Hi ${name},</h2>
             <p>Just a friendly reminder that your 2Go Massage subscription is set to expire in one week.</p>
-            <p>To ensure uninterrupted service and continue connecting with clients, please renew your subscription.</p>
+            <p>To ensure uninterrupted service and continue connecting with clients, please renew your subscription by contacting our sales team.</p>
             <div style="margin: 30px 0; text-align: center;">
-              <a href="${dashboardUrl}" style="background-color: #22c55e; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Renew in Dashboard</a>
+              <a href="${salesWhatsAppUrl}" style="background-color: #25D366; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Renew via WhatsApp</a>
             </div>
-            <p>If you have any questions or need assistance, please don't hesitate to contact our sales team on WhatsApp.</p>
-            <p><a href="${salesWhatsAppUrl}">Contact Sales on WhatsApp</a></p>
+            <p>You can check your account status by logging into your dashboard.</p>
+            <p><a href="${dashboardUrl}">Go to Dashboard</a></p>
             <br/>
             <p>Sincerely,<br/><strong>The 2Go Team</strong></p>
           </div>
         `,
       });
-
-      // --- WhatsApp Message to Sales ---
-      const salesMessage = `*Renewal Alert*\nAccount for *${name}* is due for renewal in 1 week.\n\n*Details:*\n- Name: ${name}\n- Email: ${email}\n- Phone: ${phone}\n\nClick to contact them: https://wa.me/${phone.replace(/\D/g, '')}`;
-      // This is a placeholder for a WhatsApp Business API call. For now, we'll log it.
-      // In a real scenario, you'd integrate with Twilio, Vonage, etc.
-      console.log("--- SENDING WHATSAPP TO SALES ---");
-      console.log(salesMessage);
-      console.log("---------------------------------");
     }
 
     return new Response(JSON.stringify({ message: `Processed ${allExpiringAccounts.length} renewal reminders.` }), {

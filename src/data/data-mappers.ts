@@ -16,12 +16,14 @@ export const mapSupabaseTherapistToProfile = (therapist: Tables<'therapists'>): 
   experience: therapist.experience || 0,
   isOnline: therapist.is_online || false,
   status: therapist.status || 'pending',
+  is_continuous: therapist.is_continuous || false,
   location: {
     lat: Number(therapist.lat) || 0,
     lng: Number(therapist.lng) || 0,
     address: therapist.address || '',
     city: therapist.city || '',
   },
+  distance: undefined,
   pricing: {
     session60: therapist.pricing_session_60 || 0,
     session90: therapist.pricing_session_90 || 0,
@@ -49,10 +51,12 @@ export const mapSupabasePlaceToProfile = (place: Tables<'places'>): MassagePlace
     reviewCount: place.review_count || 0,
     address: place.address || '',
     city: place.city || '',
+    is_continuous: place.is_continuous || false,
     location: {
       lat: Number(place.lat) || 0,
       lng: Number(place.lng) || 0,
     },
+    distance: undefined,
     phone: place.phone || '',
     services: place.services || [],
     languages: place.languages || [],
@@ -64,8 +68,8 @@ export const mapSupabasePlaceToProfile = (place: Tables<'places'>): MassagePlace
     openingHours: openingHours,
     isOpen: isPlaceOpen(openingHours),
     status: place.status || 'pending',
-    serviceAreas: place.service_areas || [],
     accountExpiry: place.account_expiry || undefined,
+    serviceAreas: place.service_areas || [],
   };
 };
 

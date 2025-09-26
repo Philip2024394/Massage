@@ -14,7 +14,6 @@ import { RegisterPage } from './pages/RegisterPage';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PaymentPage } from './pages/PaymentPage';
-import { ActivationSuccessPage } from './pages/ActivationSuccessPage';
 import { AgentSignUpPage } from './pages/AgentSignUpPage';
 import { UserLocation, FilterOptions, TherapistProfile, MassagePlaceProfile } from './types';
 import { calculateDistance } from './utils/location';
@@ -143,7 +142,6 @@ function App() {
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/setup-profile" element={<ProfileSetupPage />} />
             <Route path="/pay" element={<PaymentPage />} />
-            <Route path="/activation-success" element={<ActivationSuccessPage />} />
             <Route path="/agent-signup" element={<AgentSignUpPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/package-details" element={<PackageDetailsPage />} />
