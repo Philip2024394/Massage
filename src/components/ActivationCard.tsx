@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { Loader, Key, Info, MessageCircle } from 'lucide-react';
+import { Loader, Key, AlertTriangle, MessageCircle } from 'lucide-react';
 import { getWhatsAppUrl } from '../utils/location';
 
 interface ActivationCardProps {
@@ -45,14 +45,14 @@ export const ActivationCard: React.FC<ActivationCardProps> = ({ entityId, entity
   };
 
   return (
-    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-lg shadow-md">
+    <div className="bg-red-50 border-l-4 border-red-400 p-6 rounded-r-lg shadow-md">
       <div className="flex">
         <div className="flex-shrink-0">
-          <Info className="h-6 w-6 text-yellow-500" />
+          <AlertTriangle className="h-6 w-6 text-red-500" />
         </div>
         <div className="ml-4 flex-grow">
-          <h3 className="text-lg font-bold text-yellow-800">Account Inactive</h3>
-          <p className="text-sm text-yellow-700 mt-1 mb-4">
+          <h3 className="text-lg font-bold text-red-800">Account Inactive</h3>
+          <p className="text-sm text-red-700 mt-1 mb-4">
             Your account is currently inactive or has expired. Please choose a method below to activate your 1-month subscription.
           </p>
           

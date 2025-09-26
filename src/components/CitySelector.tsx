@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { indonesianCities } from '../data/indonesianCities';
@@ -8,10 +8,9 @@ interface CitySelectorProps {
   onChange: (value: string) => void;
 }
 
-export const CitySelector: React.FC<CitySelectorProps> = ({ value, onChange }) => {
+export const CitySelector = forwardRef<HTMLDivElement, CitySelectorProps>(({ value, onChange }, ref) => {
   const [inputValue, setInputValue] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setInputValue(value);
@@ -38,16 +37,17 @@ export const CitySelector: React.FC<CitySelectorProps> = ({ value, onChange }) =
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const currentRef = ref as React.RefObject<HTMLDivElement>;
+      if (currentRef && currentRef.current && !currentRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [ref]);
 
   return (
-    <div className="relative w-full" ref={dropdownRef}>
+    <div className="relative w-full" ref={ref}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
         <input
@@ -84,4 +84,4 @@ export const CitySelector: React.FC<CitySelectorProps> = ({ value, onChange }) =
       </AnimatePresence>
     </div>
   );
-};
+});

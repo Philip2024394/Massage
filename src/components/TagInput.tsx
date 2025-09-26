@@ -1,4 +1,4 @@
-import React, { useState, KeyboardEvent } from 'react';
+import React, { useState, KeyboardEvent, forwardRef } from 'react';
 import { X } from 'lucide-react';
 
 interface TagInputProps {
@@ -7,7 +7,7 @@ interface TagInputProps {
   placeholder?: string;
 }
 
-export const TagInput: React.FC<TagInputProps> = ({ value = [], onChange, placeholder = "Type and press Enter..." }) => {
+export const TagInput = forwardRef<HTMLDivElement, TagInputProps>(({ value = [], onChange, placeholder = "Type and press Enter..." }, ref) => {
   const [inputValue, setInputValue] = useState('');
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -26,7 +26,7 @@ export const TagInput: React.FC<TagInputProps> = ({ value = [], onChange, placeh
   };
 
   return (
-    <div>
+    <div ref={ref}>
       <div className="flex flex-wrap gap-2 p-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-primary-500">
         {value.map(tag => (
           <span key={tag} className="flex items-center gap-1 bg-primary-100 text-primary-700 text-sm font-medium px-2 py-1 rounded-full">
@@ -47,4 +47,4 @@ export const TagInput: React.FC<TagInputProps> = ({ value = [], onChange, placeh
       </div>
     </div>
   );
-};
+});
