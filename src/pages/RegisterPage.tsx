@@ -39,17 +39,32 @@ export const RegisterPage: React.FC = () => {
 
   if (formSubmitted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="max-w-md w-full text-center">
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
-            <CheckCircle className="h-16 w-16 text-primary-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('registrationSuccess.title')}</h2>
-            <p className="text-gray-600 mb-6">{t('registrationSuccess.message')}</p>
-            <Link to="/login" className="w-full inline-block bg-primary-500 text-white py-3 px-4 rounded-lg hover:bg-primary-600 font-medium">
-              {t('registrationSuccess.backToSignIn')}
-            </Link>
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-30">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <Link to="/home" className="text-gray-700 hover:text-primary-600 p-2 rounded-full" title="Back to Home">
+                <Home className="h-6 w-6" />
+              </Link>
+              <Link to="/">
+                <Logo layout="horizontal" className="h-10 w-auto" />
+              </Link>
+              <div className="w-10"></div> {/* Spacer */}
+            </div>
           </div>
-        </div>
+        </header>
+        <main className="flex flex-col items-center justify-center py-12 px-4">
+          <div className="max-w-md w-full text-center">
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
+              <CheckCircle className="h-16 w-16 text-primary-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('registrationSuccess.title')}</h2>
+              <p className="text-gray-600 mb-6">{t('registrationSuccess.message')}</p>
+              <Link to="/login" className="w-full inline-block bg-primary-500 text-white py-3 px-4 rounded-lg hover:bg-primary-600 font-medium">
+                {t('registrationSuccess.backToSignIn')}
+              </Link>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

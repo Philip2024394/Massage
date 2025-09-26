@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-import { Session, User as SupabaseUser, AuthError } from '@supabase/supabase-js';
+import { Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { TherapistProfile, MassagePlaceProfile, AuthInfo } from '../types';
 import { mapSupabaseTherapistToProfile, mapSupabasePlaceToProfile } from '../data/data-mappers';
@@ -29,10 +29,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const navigate = useNavigate();
 
   useEffect(() => {
-    const setAuthData = async (session: Session | null) => {
+    setLoading(true);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
         setSession(session);
         const accountType = session.user.user_metadata.account_type;
+
+        if (accountType !== 'therapist' && accountType !== 'place') {
+            console.error('Invalid account_type in user metadata:', accountType);
+            await supabase.auth.signOut();
+            return;
+        }
+
         const tableName = accountType === 'therapist' ? 'therapists' : 'places';
         
         const { data, error } = await supabase.from(tableName).select('*').eq('id', session.user.id).single();
@@ -41,13 +50,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const mappedProfile = accountType === 'therapist' ? mapSupabaseTherapistToProfile(data) : mapSupabasePlaceToProfile(data);
           setProfile({ ...mappedProfile, user_id: session.user.id });
           setRole(accountType);
-        } else if (error) {
-          console.error("Error fetching profile:", error);
-          setProfile(null);
-          setRole(null);
+        } else {
+          console.error("Auth session exists but profile not found in public table. Signing out.", error);
+          await supabase.auth.signOut();
+          return;
         }
       } else {
-        // Check for legacy admin auth
+        setSession(null);
         try {
           const storedAuth = localStorage.getItem('authInfo');
           if (storedAuth) {
@@ -56,6 +65,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               setProfile(parsedAuth);
               setRole('admin');
             } else {
+              localStorage.removeItem('authInfo');
               setProfile(null);
               setRole(null);
             }
@@ -64,21 +74,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setRole(null);
           }
         } catch (e) {
+          console.error("Error parsing legacy auth info:", e);
           localStorage.removeItem('authInfo');
           setProfile(null);
           setRole(null);
         }
       }
       setLoading(false);
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuthData(session);
-    });
-
-    // Initial check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setAuthData(session);
     });
 
     return () => {
@@ -87,7 +89,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async ({ email, password }: {email: string, password: string}) => {
-    // Admin login check
     if (email === import.meta.env.VITE_ADMIN_CODE) {
       const adminAuthInfo: AuthInfo = { code: import.meta.env.VITE_ADMIN_CODE, type: 'admin' };
       localStorage.setItem('authInfo', JSON.stringify(adminAuthInfo));
@@ -97,7 +98,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { error: null };
     }
     
-    // Regular user login
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error) navigate('/dashboard');
     return { error };
@@ -121,9 +121,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signOut = async () => {
     await supabase.auth.signOut();
     localStorage.removeItem('authInfo');
-    setProfile(null);
-    setSession(null);
-    setRole(null);
+    // State updates will be handled by onAuthStateChange listener
     navigate('/');
   };
 
